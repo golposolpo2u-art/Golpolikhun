@@ -403,7 +403,7 @@
         get: (key) => { try { return localStorage.getItem(key); } catch(e) { return null; } },
         set: (key, val) => { try { localStorage.setItem(key, val); } catch(e) {} }
     };
-
+    // Local Storage tracking - This isolates data to specific device ONLY
     let myStoryIds = JSON.parse(safeStorage.get('my_golpo_ids')) || [];
     let myKnownStoryStates = JSON.parse(safeStorage.get('my_known_story_states')) || {};
     let myNotifications = JSON.parse(safeStorage.get('my_notifications')) || [];
@@ -460,8 +460,8 @@
     const MENTOR_TANIMA = "পাঁচকাহন";
 
     // Channel Logos
-    const LOGO_PREM_KUTIR = "https://i.ibb.co/RkVN8KzW/SAVE-20250210-093153.jpg"; 
-    const LOGO_PANCHKAHON = "https://i.ibb.co/3mb1g37x/SAVE-20250210-093144.jpg";
+    const LOGO_PREM_KUTIR = "https://i.ibb.co/hJdb514B/Logo.png"; 
+    const LOGO_PANCHKAHON = "https://i.ibb.co/r2KNWgBv/Logo.png";
 
     const nehaCategories = ['রোমান্টিক', 'সামাজিক', 'বিরহ/ট্র্যাজেডি', 'ক্লাসিক', 'কমেডি/হাস্যরসাত্মক', 'পারিবারিক'];
     const tanimaCategories = ['ভূতের গল্প / হরর', 'গোয়েন্দা', 'থ্রিলার ও সাসপেন্স', 'অ্যাডভেঞ্চার', 'সায়েন্স ফিকশন', '১৮+ / ডার্ক', 'অ্যাকশন'];
