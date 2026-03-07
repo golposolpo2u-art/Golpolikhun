@@ -137,7 +137,7 @@
         .btn-action:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(233, 30, 99, 0.4); }
         .btn-action:disabled { background: #e0e0e0; color: #9e9e9e; cursor: not-allowed; box-shadow: none; }
 
-        .btn-outline { width: 100%; padding: 12px; background: transparent; color: var(--text-muted); border: 2px solid var(--text-muted); border-radius: 12px; font-weight: bold; font-size: 15px; cursor: pointer; margin-top: 30px; font-family: 'Kalpurush', Arial, sans-serif; }
+        .btn-outline { width: 100%; padding: 12px; background: transparent; color: var(--text-muted); border: 2px solid var(--text-muted); border-radius: 12px; font-weight: bold; font-size: 15px; cursor: pointer; margin-top: 10px; font-family: 'Kalpurush', Arial, sans-serif; }
         .btn-outline:hover { background: var(--text-muted); color: #fff; }
 
         /* Notification Elements */
@@ -161,7 +161,7 @@
         .decision-rejected { background: #f44336; color: white; }
 
         .remarks-box { background: var(--baby-pink); padding: 15px; border-radius: 10px; margin-top: 15px; border-left: 4px solid var(--primary-pink); }
-        .audio-player-ui { width: 100%; margin-top: 10px; height: 40px; border-radius: 20px; }
+        .audio-player-ui { width: 100%; margin-top: 10px; height: 40px; border-radius: 20px; outline: none; }
         
         .story-content-box { background: #f9f9f9; padding: 15px; border-radius: 8px; margin-top: 10px; max-height: 250px; overflow-y: auto; font-size: 15px; line-height: 1.8; color: var(--text-dark); white-space: pre-wrap; border: 1px solid #eee; }
 
@@ -188,9 +188,11 @@
         .btn-reject { background: var(--error-red); }
         .btn-save { background: var(--primary-pink); flex: 1; }
         
-        .voice-record-btn { background: #ff3d00; color: white; padding: 10px 20px; border-radius: 8px; font-weight: bold; border: none; cursor: pointer; flex: 1; font-family: 'Kalpurush', Arial, sans-serif; display: flex; align-items: center; justify-content: center; gap: 8px;}
-        .voice-record-btn.recording { animation: pulse-red 1s infinite; background: #b20000; }
-        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(255, 61, 0, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(255, 61, 0, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 61, 0, 0); } }
+        /* Voice Record Button Styling */
+        .voice-record-btn { background: #ff3d00; color: white; padding: 10px 15px; border-radius: 8px; font-weight: bold; border: none; cursor: pointer; font-size: 14px; flex: 1; font-family: 'Kalpurush', Arial, sans-serif; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.3s;}
+        .voice-record-btn:hover { background: #dd2c00; box-shadow: 0 5px 15px rgba(255, 61, 0, 0.3); }
+        .voice-record-btn.recording { animation: pulse-red 1.5s infinite; background: #b20000; }
+        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(255, 61, 0, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(255, 61, 0, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 61, 0, 0); } }
 
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
@@ -231,7 +233,7 @@
             ১. আপনার লেখা মৌলিক গল্প জমা দিন। গল্পগুলো পার্মানেন্টলি সেভ থাকবে।<br>
             ২. গল্পের শব্দসংখ্যা ন্যূনতম ৫০০০ হতে হবে। AI (কৃত্রিম বুদ্ধিমত্তা) দ্বারা লিখিত গল্প সম্পূর্ণ বাতিল (Reject) বলে গণ্য হবে।<br>
             ৩. আপনার গল্প গৃহীত হলো নাকি বাতিল, তা 'আমার গল্প ও স্ট্যাটাস' ট্যাবে দেখতে পাবেন।<br>
-            ৪. গল্প জমা দেওয়ার মাধ্যমে আপনি সজ্ঞানে গল্পের সম্প্রচার ও প্রকাশনার স্বত্ব (Copyright) আমাদের চ্যানেলকে প্রদান করছেন। ভবিষ্যতে এই গল্পের উপর কোনো প্রকার স্বত্ব বা আইনি দাবি গ্রহণযোগ্য হবে না।
+            ৪. গল্প জমা দেওয়ার মাধ্যমে আপনি সজ্ঞানে গল্পের সম্প্রচার ও প্রকাশনার স্বত্ব (Copyright) আমাদের চ্যানেলকে প্রদান করছেন। ভবিষ্যতে এই গল্পের উপর কোনো প্রকার স্বত্ব বা আইনি দাবি গ্রহণযোগ্য হবে অ্যাকা।
         </div>
 
         <form id="storyForm">
@@ -321,8 +323,8 @@
         </div>
     </div>
 
-    <button id="btnMentorLogin" class="btn-outline" onclick="openMentorLogin()">
-        <i class="fas fa-lock"></i> রিভিউয়ার প্যানেল লগইন
+    <button id="btnMentorLogin" class="btn-outline" style="margin-top:30px;" onclick="openMentorLogin()">
+        <i class="fas fa-lock"></i> অ্যাডমিন/রিভিউয়ার প্যানেল লগইন
     </button>
 </div>
 
@@ -348,7 +350,7 @@
         </label>
     </div>
 
-    <h3 style="text-align:center; border-bottom: 2px solid var(--light-pink); padding-bottom: 15px; margin-bottom: 20px; color: var(--primary-pink);">📥 আপনার জন্য নির্ধারিত গল্পসমূহ</h3>
+    <h3 style="text-align:center; border-bottom: 2px solid var(--light-pink); padding-bottom: 15px; margin-bottom: 20px; color: var(--primary-pink);">📥 জমা পড়া গল্পসমূহ</h3>
     <div id="inboxList"></div>
 </div>
 
@@ -358,7 +360,7 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 
 <script>
-    /* CORE LOGIC - GOLPO PATHAN PORTAL (V10 - Live Notifications & Voice) */
+    /* CORE LOGIC - GOLPO PATHAN PORTAL (V13 - Unified Text & Voice Remarks) */
 
     const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
         apiKey: "AIzaSyCjrGdZMocegvJBIXKI5UKAfzFK7k3-iKI", 
@@ -388,9 +390,9 @@
     let myNotifications = JSON.parse(localStorage.getItem('my_notifications')) || [];
     let unreadNotifCount = parseInt(localStorage.getItem('unread_notif_count')) || 0;
 
-    // Mapping Mentors based on Category
-    const MENTOR_NEHA = "সুচিস্মিতা নেহা";
-    const MENTOR_TANIMA = "Tanima Saha";
+    // Mapping Channels based on Category
+    const MENTOR_NEHA = "প্রেম কুটির";
+    const MENTOR_TANIMA = "পাঁচকাহন";
 
     // Category Arrays for Logic
     const nehaCategories = ['রোমান্টিক', 'সামাজিক', 'বিরহ/ট্র্যাজেডি', 'ক্লাসিক', 'কমেডি/হাস্যরসাত্মক', 'পারিবারিক'];
@@ -438,7 +440,6 @@
         } else if (tabName === 'notifications') {
             document.querySelector('.u-tab:nth-child(3)').classList.add('active');
             document.getElementById('notificationsSection').style.display = 'block';
-            // Clear unread count
             unreadNotifCount = 0;
             localStorage.setItem('unread_notif_count', 0);
             updateNotifBadgeUI();
@@ -470,9 +471,9 @@
         let mentor = "";
         if (nehaCategories.includes(cat)) mentor = MENTOR_NEHA;
         else if (tanimaCategories.includes(cat)) mentor = MENTOR_TANIMA;
-        else if (cat === 'অন্যান্য') mentor = "উভয় মেন্টর (যেকোনো একজন বা দুজনেই গ্রহণ করতে পারেন)";
+        else if (cat === 'অন্যান্য') mentor = "উভয়";
 
-        infoDiv.innerHTML = `👩‍🏫 এই গল্পটি <b>${mentor}</b> রিভিউ করবেন।`;
+        infoDiv.innerHTML = `👩‍🏫 এই গল্পটি <b>${mentor}</b> চ্যানেলে জমা হবে।`;
         infoDiv.style.display = 'block';
     }
 
@@ -581,7 +582,6 @@
             myStoryIds.push(docRef.id);
             localStorage.setItem('my_golpo_ids', JSON.stringify(myStoryIds));
             
-            // Set initial state so we don't get false notifications
             myKnownStoryStates[docRef.id] = payload;
             localStorage.setItem('my_known_story_states', JSON.stringify(myKnownStoryStates));
 
@@ -601,7 +601,6 @@
         const prevData = myKnownStoryStates[docId] || {};
         let newNotifs = [];
 
-        // Check overall/single mentor
         if (currentData.assignedMentor !== "Both") {
             if (currentData.readStatus && prevData.readStatus && currentData.readStatus !== prevData.readStatus) {
                 newNotifs.push(`আপনার গল্প "${currentData.storyTitle}" এর স্ট্যাটাস পরিবর্তন হয়ে '${currentData.readStatus}' হয়েছে।`);
@@ -610,25 +609,21 @@
                 newNotifs.push(`আপনার গল্প "${currentData.storyTitle}" এর চূড়ান্ত সিদ্ধান্ত: ${currentData.decision}`);
             }
             if ((currentData.remarks && currentData.remarks !== prevData.remarks) || (currentData.remarksVoice && currentData.remarksVoice !== prevData.remarksVoice)) {
-                newNotifs.push(`মেন্টর আপনার গল্প "${currentData.storyTitle}" এ নতুন রিমার্কস দিয়েছেন।`);
+                newNotifs.push(`আপনার গল্প "${currentData.storyTitle}" এ নতুন মতামত/রিমার্কস দেওয়া হয়েছে।`);
             }
         } else {
-            // Check Neha
-            if (currentData.readStatus_Neha !== prevData.readStatus_Neha) newNotifs.push(`প্রেম কুটির (নেহা): গল্প "${currentData.storyTitle}" এর স্ট্যাটাস '${currentData.readStatus_Neha}'।`);
-            if (currentData.decision_Neha !== prevData.decision_Neha) newNotifs.push(`প্রেম কুটির (নেহা): গল্প "${currentData.storyTitle}" এর সিদ্ধান্ত '${currentData.decision_Neha}'।`);
-            if ((currentData.remarks_Neha !== prevData.remarks_Neha) || (currentData.remarksVoice_Neha !== prevData.remarksVoice_Neha)) newNotifs.push(`প্রেম কুটির (নেহা): গল্প "${currentData.storyTitle}" এ রিমার্কস দিয়েছেন।`);
+            if (currentData.readStatus_Neha !== prevData.readStatus_Neha) newNotifs.push(`প্রেম কুটির: গল্প "${currentData.storyTitle}" এর স্ট্যাটাস '${currentData.readStatus_Neha}'।`);
+            if (currentData.decision_Neha !== prevData.decision_Neha) newNotifs.push(`প্রেম কুটির: গল্প "${currentData.storyTitle}" এর সিদ্ধান্ত '${currentData.decision_Neha}'।`);
+            if ((currentData.remarks_Neha !== prevData.remarks_Neha) || (currentData.remarksVoice_Neha !== prevData.remarksVoice_Neha)) newNotifs.push(`প্রেম কুটির: গল্প "${currentData.storyTitle}" এ মতামত/রিমার্কস দেওয়া হয়েছে।`);
             
-            // Check Tanima
-            if (currentData.readStatus_Tanima !== prevData.readStatus_Tanima) newNotifs.push(`পাঁচকাহন (তনিমা): গল্প "${currentData.storyTitle}" এর স্ট্যাটাস '${currentData.readStatus_Tanima}'।`);
-            if (currentData.decision_Tanima !== prevData.decision_Tanima) newNotifs.push(`পাঁচকাহন (তনিমা): গল্প "${currentData.storyTitle}" এর সিদ্ধান্ত '${currentData.decision_Tanima}'।`);
-            if ((currentData.remarks_Tanima !== prevData.remarks_Tanima) || (currentData.remarksVoice_Tanima !== prevData.remarksVoice_Tanima)) newNotifs.push(`পাঁচকাহন (তনিমা): গল্প "${currentData.storyTitle}" এ রিমার্কস দিয়েছেন।`);
+            if (currentData.readStatus_Tanima !== prevData.readStatus_Tanima) newNotifs.push(`পাঁচকাহন: গল্প "${currentData.storyTitle}" এর স্ট্যাটাস '${currentData.readStatus_Tanima}'।`);
+            if (currentData.decision_Tanima !== prevData.decision_Tanima) newNotifs.push(`পাঁচকাহন: গল্প "${currentData.storyTitle}" এর সিদ্ধান্ত '${currentData.decision_Tanima}'।`);
+            if ((currentData.remarks_Tanima !== prevData.remarks_Tanima) || (currentData.remarksVoice_Tanima !== prevData.remarksVoice_Tanima)) newNotifs.push(`পাঁচকাহন: গল্প "${currentData.storyTitle}" এ মতামত/রিমার্কস দেওয়া হয়েছে।`);
         }
 
         if (newNotifs.length > 0) {
-            // Play Sound
             document.getElementById('liveNotifSound').play().catch(()=>{});
             
-            // Save to history
             newNotifs.forEach(msg => {
                 myNotifications.unshift({
                     id: Date.now().toString() + Math.random(),
@@ -643,7 +638,6 @@
             updateNotifBadgeUI();
             if(document.getElementById('notificationsSection').style.display === 'block') renderNotifications();
             
-            // Optional: Browser notification
             if (Notification.permission === "granted") {
                 new Notification("গল্পপাঠান আপডেট!", { body: newNotifs[0] });
             } else if (Notification.permission !== "denied") {
@@ -651,7 +645,6 @@
             }
         }
         
-        // Update local cache
         myKnownStoryStates[docId] = currentData;
         localStorage.setItem('my_known_story_states', JSON.stringify(myKnownStoryStates));
     }
@@ -717,11 +710,19 @@
         listDiv.innerHTML = html;
     }
 
+    window.hideMyStory = function(id) {
+        if(confirm("এটি আপনার লিস্ট থেকে লুকিয়ে ফেলা হবে। আপনি কি নিশ্চিত?")) {
+            myStoryIds = myStoryIds.filter(sid => sid !== id);
+            localStorage.setItem('my_golpo_ids', JSON.stringify(myStoryIds));
+            loadMyFeedback();
+        }
+    }
+
     // --- USER FEEDBACK DISPLAY ---
     function loadMyFeedback() {
         const listDiv = document.getElementById('myStoryList');
         if(myStoryIds.length === 0) {
-            listDiv.innerHTML = "<p style='text-align:center; color:var(--text-muted);'>আপনি এখনো কোনো গল্প জমা দেননি।</p>";
+            listDiv.innerHTML = "<p style='text-align:center; color:var(--text-muted);'>আপনি এখনো কোনো গল্প জমা দেননি বা তালিকা থেকে মুছে দিয়েছেন।</p>";
             return;
         }
 
@@ -734,7 +735,6 @@
                     count++;
                     const data = doc.data();
                     
-                    // Trigger live notification check
                     processLiveNotifications(doc.id, data);
 
                     const getStatClass = (st) => st === "On Process" ? "status-process" : (st === "Complete" ? "status-complete" : "status-not-yet");
@@ -760,14 +760,14 @@
                         
                         statusAndDecisionHtml = `
                             <div style="margin-bottom: 10px; padding: 10px; background: #fffafb; border-radius: 8px; border: 1px dashed var(--light-pink);">
-                                <p style="font-size:13px; font-weight:bold; color:var(--primary-pink); margin-bottom:5px;">🏠 প্রেম কুটির (সুচিস্মিতা নেহা):</p>
+                                <p style="font-size:13px; font-weight:bold; color:var(--primary-pink); margin-bottom:5px;">🏠 প্রেম কুটির:</p>
                                 <span class="status-badge ${getStatClass(stN)}">${getStatText(stN)}</span>
                                 <span class="decision-badge ${getDecClass(dcN)}">${getDecText(dcN)}</span>
                                 ${data.remarks_Neha ? `<p style="font-size:13px; margin-top:5px; color:var(--text-dark);"><b>মতামত:</b> ${data.remarks_Neha}</p>` : ''}
                                 ${data.remarksVoice_Neha ? `<audio controls src="${data.remarksVoice_Neha}" class="audio-player-ui"></audio>` : ''}
                             </div>
                             <div style="margin-bottom: 10px; padding: 10px; background: #fdfbf7; border-radius: 8px; border: 1px dashed #ffe0b2;">
-                                <p style="font-size:13px; font-weight:bold; color:var(--gold-text); margin-bottom:5px;">📖 পাঁচকাহন (তনিমা সাহা):</p>
+                                <p style="font-size:13px; font-weight:bold; color:var(--gold-text); margin-bottom:5px;">📖 পাঁচকাহন:</p>
                                 <span class="status-badge ${getStatClass(stT)}">${getStatText(stT)}</span>
                                 <span class="decision-badge ${getDecClass(dcT)}">${getDecText(dcT)}</span>
                                 ${data.remarks_Tanima ? `<p style="font-size:13px; margin-top:5px; color:var(--text-dark);"><b>মতামত:</b> ${data.remarks_Tanima}</p>` : ''}
@@ -775,7 +775,7 @@
                             </div>
                         `;
                     } else {
-                        let channelName = data.assignedMentor === MENTOR_NEHA ? "প্রেম কুটির (সুচিস্মিতা নেহা)" : "পাঁচকাহন (Tanima Saha)";
+                        let channelName = data.assignedMentor;
                         statusAndDecisionHtml = `
                             <div style="margin-bottom: 10px;">
                                 <p style="font-size:13px; font-weight:bold; color:var(--text-muted); margin-bottom:5px;">চ্যানেল: ${channelName}</p>
@@ -784,7 +784,7 @@
                             </div>
                         `;
                         if(data.remarks || data.remarksVoice) {
-                            statusAndDecisionHtml += `<div class="remarks-box"><b style="color:var(--primary-pink); font-size:13px;">মেন্টরের মতামত (Remarks):</b>`;
+                            statusAndDecisionHtml += `<div class="remarks-box"><b style="color:var(--primary-pink); font-size:13px;">চ্যানেলের মতামত:</b>`;
                             if(data.remarks) statusAndDecisionHtml += `<p style="font-size:15px; margin-top:5px; color:var(--text-dark);">${data.remarks}</p>`;
                             if(data.remarksVoice) statusAndDecisionHtml += `<audio controls src="${data.remarksVoice}" class="audio-player-ui"></audio>`;
                             statusAndDecisionHtml += `</div>`;
@@ -798,17 +798,21 @@
                             
                             ${statusAndDecisionHtml}
                             ${storyDisplay}
+                            
+                            <button class="btn-outline" style="border-color: var(--error-red); color: var(--error-red); margin-top:15px; padding:8px;" onclick="hideMyStory('${doc.id}')">
+                                <i class="fas fa-eye-slash"></i> আমার লিস্ট থেকে মুছে ফেলুন
+                            </button>
                         </div>
                     `;
                 }
             });
-            listDiv.innerHTML = count === 0 ? "<p style='text-align:center;'>কোনো ডাটা পাওয়া যায়নি।</p>" : html;
+            listDiv.innerHTML = count === 0 ? "<p style='text-align:center; color:var(--text-muted);'>কোনো ডাটা পাওয়া যায়নি।</p>" : html;
         });
     }
 
     // --- MENTOR LOGIN & DASHBOARD ---
     window.openMentorLogin = function() {
-        const pass = prompt("রিভিউয়ার পাসওয়ার্ড দিন:");
+        const pass = prompt("অ্যাডমিন/রিভিউয়ার পাসওয়ার্ড দিন:");
         const map = { "Neha123": MENTOR_NEHA, "Tanima123": MENTOR_TANIMA, "Master2002": "All" };
 
         if (map[pass]) {
@@ -817,7 +821,7 @@
 
             document.getElementById('userPanel').style.display = 'none';
             document.getElementById('mentorPanel').style.display = 'block';
-            document.getElementById('nameTag').innerText = isMaster ? "👤 মাস্টার অ্যাডমিন" : `👤 রিভিউয়ার: ${activeMentor}`;
+            document.getElementById('nameTag').innerText = isMaster ? "👤 মাস্টার অ্যাডমিন" : `👤 চ্যানেল: ${activeMentor}`;
             
             if (isMaster) {
                 document.getElementById('adminControls').style.display = 'flex';
@@ -856,7 +860,7 @@
                     storyDisplay = `<div style="margin: 15px 0;"><a href="${item.fileUrl}" target="_blank" style="color:var(--primary-pink); font-weight:bold; text-decoration:underline;">📥 অ্যাটাচড ফাইলটি ডাউনলোড করে পড়ুন</a></div>`;
                 }
                 
-                let displayMentor = item.assignedMentor === "Both" ? "উভয় মেন্টর" : item.assignedMentor;
+                let displayMentor = item.assignedMentor === "Both" ? "উভয় চ্যানেল" : item.assignedMentor;
 
                 let currentReadStatus = item.readStatus || 'Not Yet';
                 let currentDecision = item.decision || 'Pending';
@@ -877,17 +881,16 @@
                     }
                 }
 
-                let voiceHtml = currentVoice ? `<div style="margin-top:5px; color:var(--success-green); font-size:12px;">✅ ভয়েস রিমার্কস যুক্ত করা আছে।</div>` : "";
-
                 list.innerHTML += `
                     <div class="user-feedback-card">
                         <span style="float:right; font-size:12px; color:#888;">${new Date(item.ts).toLocaleTimeString('bn-BD')}</span>
                         <p style="font-size:20px; font-weight:bold; color:var(--primary-pink);">${item.storyTitle}</p>
-                        <p style="font-size:13px; color:var(--text-muted); margin-bottom:10px;">লেখক: <b>${item.authorName}</b> | ক্যাটাগরি: ${item.category} ${isMaster || item.assignedMentor === "Both" ? `| মেন্টর: ${displayMentor}` : ''}</p>
+                        <p style="font-size:13px; color:var(--text-muted); margin-bottom:10px;">লেখক: <b>${item.authorName}</b> | ক্যাটাগরি: ${item.category} | চ্যানেল: ${displayMentor}</p>
                         
                         ${storyDisplay}
                         
                         <div class="review-controls">
+                            <!-- Status Update -->
                             <div class="control-row">
                                 <label style="font-weight:bold; font-size:14px; color:var(--text-dark);">বর্তমান স্ট্যাটাস:</label>
                                 <select onchange="updateStoryField('${item.id}', 'readStatus', this.value, '${item.assignedMentor}')" style="flex:1; margin-bottom:0; padding:10px; border-radius:8px;">
@@ -906,14 +909,42 @@
                                 </button>
                             </div>
 
-                            <textarea id="rem_${item.id}" placeholder="টেক্সট মতামত (Remarks) লিখুন..." style="min-height:80px; margin-bottom:5px;">${currentRemarks}</textarea>
-                            
-                            <div class="control-row" style="margin-top:10px;">
-                                <button class="action-btn btn-save" onclick="saveTextRemarks('${item.id}', '${item.assignedMentor}')">সেভ রিমার্কস (টেক্সট)</button>
-                                <button id="vBtn_${item.id}" class="voice-record-btn" onclick="toggleVoiceRecord('${item.id}', '${item.assignedMentor}')"><i class="fas fa-microphone"></i> ভয়েস রিমার্কস</button>
+                            <!-- COMBINED REMARKS SECTION -->
+                            <div style="background: rgba(233, 30, 99, 0.05); padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px solid var(--light-pink);">
+                                <p style="font-weight:bold; color:var(--primary-pink); margin-bottom:10px; font-size:15px;">
+                                    <i class="fas fa-comment-dots"></i> মেন্টরের মতামত (টেক্সট এবং ভয়েস)
+                                </p>
+                                
+                                <textarea id="rem_${item.id}" placeholder="এখানে টেক্সট মতামত লিখুন..." style="min-height:70px; margin-bottom:10px;">${currentRemarks}</textarea>
+                                
+                                <div id="voiceSection_${item.id}" style="margin-bottom: 15px;">
+                                    ${currentVoice ? `
+                                        <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                                            <audio controls src="${currentVoice}" style="flex:1; height:40px; outline:none;"></audio>
+                                            <button onclick="clearVoiceRemarks('${item.id}', '${item.assignedMentor}')" style="background:transparent; border:none; color:var(--error-red); cursor:pointer; font-size:18px;" title="ভয়েস মুছুন"><i class="fas fa-trash"></i></button>
+                                        </div>
+                                    ` : ''}
+                                    
+                                    <div style="display: flex; gap: 10px;">
+                                        <button id="vBtn_${item.id}" class="voice-record-btn" onclick="toggleVoiceRecord('${item.id}', '${item.assignedMentor}')">
+                                            <i class="fas fa-microphone"></i> ${currentVoice ? 'নতুন করে ভয়েস রেকর্ড করুন' : 'ভয়েস রিমার্কস রেকর্ড করুন'}
+                                        </button>
+                                    </div>
+                                    <div id="vLog_${item.id}" style="text-align:center; font-size:13px; font-weight:bold; color:var(--text-dark); margin-top:5px;"></div>
+                                </div>
+
+                                <div class="control-row" style="margin-top:0;">
+                                    <button class="action-btn btn-save" onclick="saveTextRemarks('${item.id}', '${item.assignedMentor}')">
+                                        <i class="fas fa-save"></i> রিমার্কস সেভ করুন
+                                    </button>
+                                </div>
                             </div>
-                            <div id="vLog_${item.id}" style="text-align:center; font-size:12px; color:var(--text-muted);">${voiceHtml}</div>
                         </div>
+
+                        <hr style="border:0; border-top:1px dashed #ccc; margin: 20px 0;">
+                        <button class="btn-outline" style="width:100%; border-color: var(--error-red); color: var(--error-red);" onclick="deleteDoc('${item.id}')">
+                            <i class="fas fa-trash-alt"></i> সম্পূর্ণ গল্পটি ডিলিট করুন
+                        </button>
                     </div>
                 `;
             });
@@ -950,7 +981,24 @@
             let updateData = {};
             updateData[actualField] = text;
             await getRef('stories').doc(docId).update(updateData); 
-            alert("টেক্সট রিমার্কস সেভ হয়েছে!");
+            alert("মতামত সেভ হয়েছে!");
+        } 
+        catch (e) { alert("ত্রুটি!"); }
+    };
+
+    window.clearVoiceRemarks = async function(docId, assignedMentor) {
+        if (!auth.currentUser) return;
+        if (!confirm("আপনি কি নিশ্চিতভাবে এই গল্পের ভয়েস রিমার্কস মুছে ফেলতে চান?")) return;
+        try { 
+            let actualField = "remarksVoice";
+            if (assignedMentor === "Both" && !isMaster) {
+                if (activeMentor === MENTOR_NEHA) actualField = "remarksVoice_Neha";
+                if (activeMentor === MENTOR_TANIMA) actualField = "remarksVoice_Tanima";
+            }
+            let updateData = {};
+            updateData[actualField] = "";
+            await getRef('stories').doc(docId).update(updateData); 
+            alert("ভয়েস রিমার্কস মুছে ফেলা হয়েছে!");
         } 
         catch (e) { alert("ত্রুটি!"); }
     };
@@ -966,13 +1014,13 @@
                 audioChunks = [];
                 audioRecorder.ondataavailable = e => audioChunks.push(e.data);
                 audioRecorder.onstop = async () => {
-                    log.innerHTML = "⏳ আপলোড হচ্ছে...";
+                    log.innerHTML = "⏳ অডিও আপলোড হচ্ছে, দয়া করে অপেক্ষা করুন...";
                     const fd = new FormData();
-                    fd.append('file', new Blob(audioChunks, { type: 'audio/wav' }));
+                    fd.append('file', new Blob(audioChunks, { type: 'audio/webm' }));
                     fd.append('upload_preset', UPLOAD_PRESET);
                     
                     try {
-                        const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, { method: 'POST', body: fd });
+                        const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/video/upload`, { method: 'POST', body: fd });
                         const data = await res.json();
                         if (data.secure_url) {
                             let actualField = "remarksVoice";
@@ -983,18 +1031,32 @@
                             let updateData = {};
                             updateData[actualField] = data.secure_url;
                             await getRef('stories').doc(docId).update(updateData); 
-                            log.innerHTML = "✅ ভয়েস রিমার্কস সেভ হয়েছে!";
+                            log.innerHTML = "✅ ভয়েস রিমার্কস সফলভাবে সেভ হয়েছে!";
+                        } else {
+                            log.innerHTML = "❌ আপলোড ফেইল হয়েছে! " + (data.error?.message || "");
                         }
-                    } catch(e) { log.innerHTML = "❌ আপলোড ফেইল হয়েছে!"; }
+                    } catch(e) { log.innerHTML = "❌ সার্ভার এরর!"; }
                 };
                 audioRecorder.start();
-                btn.innerHTML = "<i class='fas fa-stop'></i> রেকর্ডিং বন্ধ করুন"; 
+                btn.innerHTML = "<i class='fas fa-stop-circle'></i> রেকর্ডিং বন্ধ করুন"; 
                 btn.classList.add('recording');
+                log.innerHTML = "🔴 ভয়েস রেকর্ডিং চলছে...";
             } catch (err) { alert("মাইক্রোফোন পারমিশন দিন!"); }
         } else {
             audioRecorder.stop();
-            btn.innerHTML = "<i class='fas fa-microphone'></i> ভয়েস রিমার্কস"; 
+            btn.innerHTML = "<i class='fas fa-microphone'></i> ভয়েস রিমার্কস রেকর্ড করুন"; 
             btn.classList.remove('recording');
+        }
+    };
+
+    window.deleteDoc = async function(id) {
+        if(confirm("আপনি কি নিশ্চিত যে এই সম্পূর্ণ গল্পটি চিরতরে মুছে ফেলতে চান? (এই কাজ ফেরানো যাবে না)")) {
+            try {
+                await getRef('stories').doc(id).delete();
+                alert("গল্পটি ডিলিট করা হয়েছে।");
+            } catch(e) {
+                alert("ডিলিট করতে সমস্যা হয়েছে!");
+            }
         }
     };
 
