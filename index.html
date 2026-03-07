@@ -205,6 +205,19 @@
 <div class="bg-circle c1"></div>
 <div class="bg-circle c2"></div>
 
+<!-- Custom Safe Modal UI (Replaces standard blocked alerts) -->
+<div id="customModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; justify-content:center; align-items:center; backdrop-filter:blur(5px);">
+    <div style="background:#fff; padding:25px; border-radius:15px; max-width:400px; width:90%; text-align:center; color:#333; box-shadow: 0 10px 30px rgba(233,30,99,0.3);">
+        <h3 id="modalTitle" style="color:var(--primary-pink); margin-bottom:15px; font-size: 22px; font-family:'NuralamZainulAbedin', 'Kalpurush', sans-serif;"></h3>
+        <p id="modalMessage" style="font-size:16px; margin-bottom:20px; font-family: 'Kalpurush';"></p>
+        <input type="text" id="modalInput" style="display:none; width:100%; padding:12px; margin-bottom:20px; border:1px solid #ccc; border-radius:8px; font-family: 'Kalpurush'; font-size: 16px;">
+        <div style="display:flex; gap:10px; justify-content:center;">
+            <button id="modalBtnCancel" style="display:none; background:#888; color:white; padding:10px 20px; border:none; border-radius:8px; cursor:pointer; font-family: 'Kalpurush'; font-weight: bold;">বাতিল</button>
+            <button id="modalBtnConfirm" style="background:var(--primary-pink); color:white; padding:10px 20px; border:none; border-radius:8px; cursor:pointer; font-family: 'Kalpurush'; font-weight: bold;">ঠিক আছে</button>
+        </div>
+    </div>
+</div>
+
 <!-- Audio for Live Notification Alert -->
 <audio id="liveNotifSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
 
@@ -360,7 +373,7 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 
 <script>
-    /* CORE LOGIC - GOLPO PATHAN PORTAL (V15 - Final Fixes) */
+    /* CORE LOGIC - GOLPO PATHAN PORTAL (V16 - Sandbox Fixes) */
 
     const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
         apiKey: "AIzaSyCjrGdZMocegvJBIXKI5UKAfzFK7k3-iKI", 
@@ -375,8 +388,6 @@
     const CLOUD_NAME = 'dy9bujsit'; 
     const UPLOAD_PRESET = 'Prothom Kotha Voice';
     
-    const getRef = (col) => db.collection('artifacts').doc(appId).collection('public').doc('data').collection(col);
-
     let activeMentor = "";
     let isMaster = false;
     let isPdfAllowedGlobal = false;
@@ -385,11 +396,47 @@
     let audioRecorder;
     let audioChunks = [];
 
-    // Local Storage tracking - This isolates data to specific device ONLY
-    let myStoryIds = JSON.parse(localStorage.getItem('my_golpo_ids')) || [];
-    let myKnownStoryStates = JSON.parse(localStorage.getItem('my_known_story_states')) || {};
-    let myNotifications = JSON.parse(localStorage.getItem('my_notifications')) || [];
-    let unreadNotifCount = parseInt(localStorage.getItem('unread_notif_count')) || 0;
+    // Memory variables to replace insecure localStorage
+    let myStoryIds = [];
+    let myKnownStoryStates = {};
+    let myNotifications = [];
+    let unreadNotifCount = 0;
+    let notifAutoDeleteDays = 'never';
+
+    // Custom Modal Logic (Replaces Alert, Prompt, Confirm which get blocked in Canvas)
+    function showModal(title, message, type = 'alert', callback = null, inputType = 'text') {
+        const modal = document.getElementById('customModal');
+        document.getElementById('modalTitle').innerText = title;
+        document.getElementById('modalMessage').innerText = message;
+        
+        const inputEl = document.getElementById('modalInput');
+        inputEl.style.display = type === 'prompt' ? 'block' : 'none';
+        inputEl.type = inputType;
+        inputEl.value = '';
+        
+        const btnCancel = document.getElementById('modalBtnCancel');
+        btnCancel.style.display = (type === 'prompt' || type === 'confirm') ? 'inline-block' : 'none';
+        
+        const btnConfirm = document.getElementById('modalBtnConfirm');
+        
+        modal.style.display = 'flex';
+        if(type === 'prompt') inputEl.focus();
+
+        btnConfirm.onclick = () => {
+            modal.style.display = 'none';
+            if(callback) {
+                if(type === 'prompt') callback(inputEl.value);
+                else if(type === 'confirm') callback(true);
+                else callback();
+            }
+        };
+
+        btnCancel.onclick = () => {
+            modal.style.display = 'none';
+            if(type === 'prompt') callback(null);
+            else if(type === 'confirm') callback(false);
+        };
+    }
 
     // Mapping Channels based on Category
     const MENTOR_NEHA = "প্রেম কুটির";
@@ -399,9 +446,42 @@
     const LOGO_PREM_KUTIR = "https://i.ibb.co/RkVN8KzW/SAVE-20250210-093153.jpg"; 
     const LOGO_PANCHKAHON = "https://i.ibb.co/3mb1g37x/SAVE-20250210-093144.jpg";
 
-    // Category Arrays for Logic
     const nehaCategories = ['রোমান্টিক', 'সামাজিক', 'বিরহ/ট্র্যাজেডি', 'ক্লাসিক', 'কমেডি/হাস্যরসাত্মক', 'পারিবারিক'];
     const tanimaCategories = ['ভূতের গল্প / হরর', 'গোয়েন্দা', 'থ্রিলার ও সাসপেন্স', 'অ্যাডভেঞ্চার', 'সায়েন্স ফিকশন', '১৮+ / ডার্ক', 'অ্যাকশন'];
+
+    // Load data safely from Firestore for current user
+    async function loadUserDataSafely(user) {
+        try {
+            const doc = await db.collection('artifacts').doc(appId).collection('users').doc(user.uid).collection('userData').doc('profile').get();
+            if (doc.exists) {
+                const d = doc.data();
+                myStoryIds = d.myStoryIds || [];
+                myKnownStoryStates = d.myKnownStoryStates || {};
+                myNotifications = d.myNotifications || [];
+                unreadNotifCount = d.unreadNotifCount || 0;
+                notifAutoDeleteDays = d.notifAutoDeleteDays || 'never';
+            }
+        } catch (e) {
+            console.error("Error loading profile", e);
+        }
+    }
+
+    // Save data safely to Firestore for current user
+    async function saveUserDataSafely() {
+        const user = auth.currentUser;
+        if (!user) return;
+        try {
+            await db.collection('artifacts').doc(appId).collection('users').doc(user.uid).collection('userData').doc('profile').set({
+                myStoryIds: myStoryIds,
+                myKnownStoryStates: myKnownStoryStates,
+                myNotifications: myNotifications,
+                unreadNotifCount: unreadNotifCount,
+                notifAutoDeleteDays: notifAutoDeleteDays
+            }, { merge: true });
+        } catch (e) {
+            console.error("Error saving profile", e);
+        }
+    }
 
     window.onload = async function() {
         try {
@@ -412,18 +492,19 @@
             }
         } catch (err) {
             document.getElementById('upload-status').innerText = "সার্ভার কানেকশন এরর!";
+            return;
         }
 
-        auth.onAuthStateChanged(user => {
+        auth.onAuthStateChanged(async user => {
             if (user) {
-                listenSystemSettings();
-                startUserStoryListener(); // Single listener initialized here
-                updateNotifBadgeUI();
-                renderNotifications();
+                await loadUserDataSafely(user);
                 
-                const savedAutoDel = localStorage.getItem('notif_auto_delete_days') || 'never';
-                document.getElementById('autoDeleteSetting').value = savedAutoDel;
+                document.getElementById('autoDeleteSetting').value = notifAutoDeleteDays;
+                listenSystemSettings();
+                startUserStoryListener(); 
+                updateNotifBadgeUI();
                 processAutoDeleteNotifications();
+                renderNotifications();
             }
         });
     };
@@ -445,7 +526,7 @@
             document.querySelector('.u-tab:nth-child(3)').classList.add('active');
             document.getElementById('notificationsSection').style.display = 'block';
             unreadNotifCount = 0;
-            localStorage.setItem('unread_notif_count', 0);
+            saveUserDataSafely();
             updateNotifBadgeUI();
             renderNotifications();
         }
@@ -499,7 +580,7 @@
     }
 
     function listenSystemSettings() {
-        getRef('settings').doc('systemControl').onSnapshot(doc => {
+        db.collection('artifacts').doc(appId).collection('public').doc('data').collection('settings').doc('systemControl').onSnapshot(doc => {
             const data = doc.exists ? doc.data() : null;
             isPdfAllowedGlobal = data ? data.allowPdf : false;
             
@@ -521,12 +602,12 @@
         const statusDiv = document.getElementById('upload-status');
         
         let cat = document.getElementById('storyCategory').value;
-        if(!cat) return alert("দয়া করে গল্পের ক্যাটাগরি সিলেক্ট করুন!");
+        if(!cat) return showModal("সতর্কতা", "দয়া করে গল্পের ক্যাটাগরি সিলেক্ট করুন!");
 
         let finalCategory = cat;
         if (cat === 'অন্যান্য') {
             finalCategory = document.getElementById('otherCategoryInput').value.trim();
-            if (!finalCategory) return alert("দয়া করে গল্পের ক্যাটাগরি লিখে জানান!");
+            if (!finalCategory) return showModal("সতর্কতা", "দয়া করে গল্পের ক্যাটাগরি লিখে জানান!");
         }
 
         const subType = document.getElementById('submissionType').value;
@@ -534,14 +615,14 @@
         const fileObj = document.getElementById('storyFile').files[0];
 
         if (subType === 'text') {
-            if (!textContent.trim()) return alert("গল্পের অংশ ফাঁকা রাখা যাবে না!");
+            if (!textContent.trim()) return showModal("সতর্কতা", "গল্পের অংশ ফাঁকা রাখা যাবে না!");
             const wordCount = textContent.trim().split(/\s+/).filter(word => word.length > 0).length;
             if (wordCount < 5000) {
-                return alert(`দুঃখিত! গল্পের শব্দসংখ্যা ন্যূনতম ৫০০০ হতে হবে। আপনার গল্পে মাত্র ${wordCount} শব্দ আছে।`);
+                return showModal("সতর্কতা", `দুঃখিত! গল্পের শব্দসংখ্যা ন্যূনতম ৫০০০ হতে হবে। আপনার গল্পে মাত্র ${wordCount} শব্দ আছে।`);
             }
         }
         
-        if ((subType === 'doc' || subType === 'pdf') && !fileObj) return alert("ফাইল সিলেক্ট করুন!");
+        if ((subType === 'doc' || subType === 'pdf') && !fileObj) return showModal("সতর্কতা", "ফাইল সিলেক্ট করুন!");
 
         let assignedMentor = "Both";
         if (nehaCategories.includes(cat)) assignedMentor = MENTOR_NEHA;
@@ -582,12 +663,10 @@
         };
 
         try {
-            const docRef = await getRef('stories').add(payload);
+            const docRef = await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('stories').add(payload);
             myStoryIds.push(docRef.id);
-            localStorage.setItem('my_golpo_ids', JSON.stringify(myStoryIds));
-            
             myKnownStoryStates[docRef.id] = payload;
-            localStorage.setItem('my_known_story_states', JSON.stringify(myKnownStoryStates));
+            await saveUserDataSafely();
 
             statusDiv.innerHTML = "✅ আপনার গল্প সফলভাবে জমা হয়েছে!";
             this.reset();
@@ -606,7 +685,7 @@
         
         if (!prevData) {
             myKnownStoryStates[docId] = currentData;
-            localStorage.setItem('my_known_story_states', JSON.stringify(myKnownStoryStates));
+            saveUserDataSafely();
             return;
         }
         
@@ -648,21 +727,17 @@
                 });
                 unreadNotifCount++;
             });
-            localStorage.setItem('my_notifications', JSON.stringify(myNotifications));
-            localStorage.setItem('unread_notif_count', unreadNotifCount);
+            
+            myKnownStoryStates[docId] = currentData;
+            saveUserDataSafely();
             
             updateNotifBadgeUI();
             if(document.getElementById('notificationsSection').style.display === 'block') renderNotifications();
             
-            if (Notification.permission === "granted") {
-                new Notification("গল্পপাঠান আপডেট!", { body: newNotifs[0] });
-            } else if (Notification.permission !== "denied") {
-                Notification.requestPermission();
-            }
+        } else {
+            myKnownStoryStates[docId] = currentData;
+            saveUserDataSafely();
         }
-        
-        myKnownStoryStates[docId] = currentData;
-        localStorage.setItem('my_known_story_states', JSON.stringify(myKnownStoryStates));
     }
 
     function updateNotifBadgeUI() {
@@ -676,33 +751,34 @@
     }
 
     window.saveAutoDeleteSetting = function() {
-        const val = document.getElementById('autoDeleteSetting').value;
-        localStorage.setItem('notif_auto_delete_days', val);
+        notifAutoDeleteDays = document.getElementById('autoDeleteSetting').value;
+        saveUserDataSafely();
         processAutoDeleteNotifications();
         renderNotifications();
     }
 
     function processAutoDeleteNotifications() {
-        const val = localStorage.getItem('notif_auto_delete_days') || 'never';
-        if (val === 'never') return;
-        
-        const days = parseInt(val);
+        if (notifAutoDeleteDays === 'never') return;
+        const days = parseInt(notifAutoDeleteDays);
         const threshold = Date.now() - (days * 24 * 60 * 60 * 1000);
+        const origLen = myNotifications.length;
         myNotifications = myNotifications.filter(n => n.time > threshold);
-        localStorage.setItem('my_notifications', JSON.stringify(myNotifications));
+        if (myNotifications.length !== origLen) saveUserDataSafely();
     }
 
     window.clearAllNotifications = function() {
-        if(confirm("সব নোটিফিকেশন মুছতে চান?")) {
-            myNotifications = [];
-            localStorage.setItem('my_notifications', JSON.stringify(myNotifications));
-            renderNotifications();
-        }
+        showModal("নিশ্চিতকরণ", "সব নোটিফিকেশন মুছতে চান?", "confirm", (res) => {
+            if(res) {
+                myNotifications = [];
+                saveUserDataSafely();
+                renderNotifications();
+            }
+        });
     }
 
     window.deleteIndividualNotification = function(id) {
         myNotifications = myNotifications.filter(n => n.id !== id);
-        localStorage.setItem('my_notifications', JSON.stringify(myNotifications));
+        saveUserDataSafely();
         renderNotifications();
     }
 
@@ -727,12 +803,14 @@
     }
 
     window.hideMyStory = function(id) {
-        if(confirm("এটি আপনার লিস্ট থেকে লুকিয়ে ফেলা হবে। আপনি কি নিশ্চিত?")) {
-            myStoryIds = myStoryIds.filter(sid => sid !== id);
-            localStorage.setItem('my_golpo_ids', JSON.stringify(myStoryIds));
-            const card = document.getElementById(`storyCard_${id}`);
-            if(card) card.style.display = 'none';
-        }
+        showModal("নিশ্চিতকরণ", "এটি আপনার লিস্ট থেকে লুকিয়ে ফেলা হবে। আপনি কি নিশ্চিত?", "confirm", (res) => {
+            if(res) {
+                myStoryIds = myStoryIds.filter(sid => sid !== id);
+                saveUserDataSafely();
+                const card = document.getElementById(`storyCard_${id}`);
+                if(card) card.style.display = 'none';
+            }
+        });
     }
 
     // --- SINGLE USER LISTENER ---
@@ -740,7 +818,7 @@
         if(isUserListenerRunning) return; 
         isUserListenerRunning = true;
 
-        getRef('stories').onSnapshot(snap => {
+        db.collection('artifacts').doc(appId).collection('public').doc('data').collection('stories').onSnapshot(snap => {
             let html = "";
             let count = 0;
 
@@ -839,32 +917,36 @@
 
     // --- MENTOR LOGIN & DASHBOARD ---
     window.openMentorLogin = function() {
-        const pass = prompt("অ্যাডমিন/রিভিউয়ার পাসওয়ার্ড দিন:");
-        const map = { "Neha123": MENTOR_NEHA, "Tanima123": MENTOR_TANIMA, "Master2002": "All" };
+        showModal("লগইন", "অ্যাডমিন/রিভিউয়ার পাসওয়ার্ড দিন:", "prompt", (pass) => {
+            if (!pass) return;
+            const map = { "Neha123": MENTOR_NEHA, "Tanima123": MENTOR_TANIMA, "Master2002": "All" };
 
-        if (map[pass]) {
-            activeMentor = map[pass];
-            isMaster = (activeMentor === "All");
+            if (map[pass]) {
+                activeMentor = map[pass];
+                isMaster = (activeMentor === "All");
 
-            document.getElementById('userPanel').style.display = 'none';
-            document.getElementById('mentorPanel').style.display = 'block';
-            document.getElementById('nameTag').innerText = isMaster ? "👤 মাস্টার অ্যাডমিন" : `👤 চ্যানেল: ${activeMentor}`;
-            
-            if (isMaster) {
-                document.getElementById('adminControls').style.display = 'flex';
-                listenSystemSettings();
+                document.getElementById('userPanel').style.display = 'none';
+                document.getElementById('mentorPanel').style.display = 'block';
+                document.getElementById('nameTag').innerText = isMaster ? "👤 মাস্টার অ্যাডমিন" : `👤 চ্যানেল: ${activeMentor}`;
+                
+                if (isMaster) {
+                    document.getElementById('adminControls').style.display = 'flex';
+                    listenSystemSettings();
+                }
+                startMentorInboxListener();
+            } else { 
+                showModal("ত্রুটি", "ভুল পাসওয়ার্ড!"); 
             }
-            startMentorInboxListener();
-        } else { alert("ভুল পাসওয়ার্ড!"); }
+        }, "password");
     };
 
     async function updatePdfPermissionGlobal(val) {
         if (!isMaster) return;
-        await getRef('settings').doc('systemControl').set({ allowPdf: val }, { merge: true });
+        await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('settings').doc('systemControl').set({ allowPdf: val }, { merge: true });
     }
 
     function startMentorInboxListener() {
-        getRef('stories').onSnapshot(snap => {
+        db.collection('artifacts').doc(appId).collection('public').doc('data').collection('stories').onSnapshot(snap => {
             const list = document.getElementById('inboxList');
             let dataArr = [];
 
@@ -917,7 +999,6 @@
                         ${storyDisplay}
                         
                         <div class="review-controls">
-                            <!-- Status Update -->
                             <div class="control-row">
                                 <label style="font-weight:bold; font-size:14px; color:var(--text-dark);">বর্তমান স্ট্যাটাস:</label>
                                 <select onchange="updateStoryField('${item.id}', 'readStatus', this.value, '${item.assignedMentor}')" style="flex:1; margin-bottom:0; padding:10px; border-radius:8px;">
@@ -936,7 +1017,6 @@
                                 </button>
                             </div>
 
-                            <!-- COMBINED REMARKS SECTION -->
                             <div style="background: rgba(233, 30, 99, 0.05); padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px solid var(--light-pink);">
                                 <p style="font-weight:bold; color:var(--primary-pink); margin-bottom:10px; font-size:15px;">
                                     <i class="fas fa-comment-dots"></i> মেন্টরের মতামত (টেক্সট এবং ভয়েস)
@@ -991,9 +1071,9 @@
             }
             let updateData = {};
             updateData[actualField] = value;
-            await getRef('stories').doc(docId).update(updateData); 
+            await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('stories').doc(docId).update(updateData); 
         } 
-        catch (e) { alert("আপডেট করতে সমস্যা হয়েছে!"); }
+        catch (e) { showModal("ত্রুটি", "আপডেট করতে সমস্যা হয়েছে!"); }
     };
 
     window.saveTextRemarks = async function(docId, assignedMentor) {
@@ -1007,27 +1087,30 @@
             }
             let updateData = {};
             updateData[actualField] = text;
-            await getRef('stories').doc(docId).update(updateData); 
-            alert("মতামত সেভ হয়েছে!");
+            await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('stories').doc(docId).update(updateData); 
+            showModal("সফল", "মতামত সেভ হয়েছে!");
         } 
-        catch (e) { alert("ত্রুটি!"); }
+        catch (e) { showModal("ত্রুটি", "মতামত সেভ করতে সমস্যা হয়েছে!"); }
     };
 
     window.clearVoiceRemarks = async function(docId, assignedMentor) {
         if (!auth.currentUser) return;
-        if (!confirm("আপনি কি নিশ্চিতভাবে এই গল্পের ভয়েস রিমার্কস মুছে ফেলতে চান?")) return;
-        try { 
-            let actualField = "remarksVoice";
-            if (assignedMentor === "Both" && !isMaster) {
-                if (activeMentor === MENTOR_NEHA) actualField = "remarksVoice_Neha";
-                if (activeMentor === MENTOR_TANIMA) actualField = "remarksVoice_Tanima";
+        showModal("নিশ্চিতকরণ", "আপনি কি নিশ্চিতভাবে এই গল্পের ভয়েস রিমার্কস মুছে ফেলতে চান?", "confirm", async (res) => {
+            if(res) {
+                try { 
+                    let actualField = "remarksVoice";
+                    if (assignedMentor === "Both" && !isMaster) {
+                        if (activeMentor === MENTOR_NEHA) actualField = "remarksVoice_Neha";
+                        if (activeMentor === MENTOR_TANIMA) actualField = "remarksVoice_Tanima";
+                    }
+                    let updateData = {};
+                    updateData[actualField] = "";
+                    await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('stories').doc(docId).update(updateData); 
+                    showModal("সফল", "ভয়েস রিমার্কস মুছে ফেলা হয়েছে!");
+                } 
+                catch (e) { showModal("ত্রুটি", "সমস্যা হয়েছে!"); }
             }
-            let updateData = {};
-            updateData[actualField] = "";
-            await getRef('stories').doc(docId).update(updateData); 
-            alert("ভয়েস রিমার্কস মুছে ফেলা হয়েছে!");
-        } 
-        catch (e) { alert("ত্রুটি!"); }
+        });
     };
 
     window.toggleVoiceRecord = async function(docId, assignedMentor) {
@@ -1057,7 +1140,7 @@
                             }
                             let updateData = {};
                             updateData[actualField] = data.secure_url;
-                            await getRef('stories').doc(docId).update(updateData); 
+                            await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('stories').doc(docId).update(updateData); 
                             log.innerHTML = "✅ ভয়েস রিমার্কস সফলভাবে সেভ হয়েছে!";
                         } else {
                             log.innerHTML = "❌ আপলোড ফেইল হয়েছে! " + (data.error?.message || "");
@@ -1068,7 +1151,7 @@
                 btn.innerHTML = "<i class='fas fa-stop-circle'></i> রেকর্ডিং বন্ধ করুন"; 
                 btn.classList.add('recording');
                 log.innerHTML = "🔴 ভয়েস রেকর্ডিং চলছে...";
-            } catch (err) { alert("মাইক্রোফোন পারমিশন দিন!"); }
+            } catch (err) { showModal("সতর্কতা", "মাইক্রোফোন পারমিশন দিন!"); }
         } else {
             audioRecorder.stop();
             btn.innerHTML = "<i class='fas fa-microphone'></i> ভয়েস রিমার্কস রেকর্ড করুন"; 
@@ -1077,14 +1160,16 @@
     };
 
     window.deleteDoc = async function(id) {
-        if(confirm("আপনি কি নিশ্চিত যে এই সম্পূর্ণ গল্পটি চিরতরে মুছে ফেলতে চান? (এই কাজ ফেরানো যাবে না)")) {
-            try {
-                await getRef('stories').doc(id).delete();
-                alert("গল্পটি ডিলিট করা হয়েছে।");
-            } catch(e) {
-                alert("ডিলিট করতে সমস্যা হয়েছে!");
+        showModal("সতর্কীকরণ", "আপনি কি নিশ্চিত যে এই সম্পূর্ণ গল্পটি চিরতরে মুছে ফেলতে চান? (এই কাজ ফেরানো যাবে না)", "confirm", async (res) => {
+            if(res) {
+                try {
+                    await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('stories').doc(id).delete();
+                    showModal("সফল", "গল্পটি ডিলিট করা হয়েছে।");
+                } catch(e) {
+                    showModal("ত্রুটি", "ডিলিট করতে সমস্যা হয়েছে!");
+                }
             }
-        }
+        });
     };
 
     window.exitDashboard = async () => { location.reload(); };
