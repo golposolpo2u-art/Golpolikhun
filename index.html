@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>গল্পপাঠান - Golposolpo Premium Story Portal</title>
+    
+    <!-- SEO Optimization Tags -->
+    <meta name="title" content="গল্পপাঠান - Smart Story Portal">
+    <meta name="description" content="Golposolpo premium story submission and review portal.">
+    
+    <!-- External Resources -->
+    <link href="https://fonts.maateen.me/kalpurush/font.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        /* PREMIUM BABY PINK & WHITE THEME */
+        :root {
+            --primary-pink: #e91e63;
+            --secondary-pink: #f06292;
+            --light-pink: #f8bbd0;
+            --baby-pink: #fce4ec;
+            --pure-white: #ffffff;
+            --text-dark: #212121;
+            --text-muted: #555555;
+            --success-green: #2e7d32;
+            --error-red: #c62828;
+            --gold-text: #f57f17;
+            --glass-border: rgba(233, 30, 99, 0.2);
+            --card-shadow: 0 10px 30px rgba(233, 30, 99, 0.1);
+        }
+
+        @font-face {
+            font-family: 'EkushRegular';
+            src: url('Ekush-Regular.ttf') format('truetype');
+        }
+
+        @font-face {
+            font-family: 'NuralamZainulAbedin';
+            src: url('FN NuralamZainulAbedin Unicode Bold.ttf') format('truetype');
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; transition: all 0.3s ease; }
+
+        body { 
+            font-family: 'Kalpurush', Arial, sans-serif; 
+            background: linear-gradient(135deg, #fff0f5 0%, #fce4ec 50%, #f8bbd0 100%);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 40px 15px;
+            overflow-x: hidden;
+        }
+
+        /* Background Soft Shapes */
+        .bg-circle { position: fixed; border-radius: 50%; z-index: -1; filter: blur(80px); opacity: 0.6; animation: float 15s infinite alternate; }
+        .c1 { width: 350px; height: 350px; background: #ffffff; top: -50px; left: -50px; }
+        .c2 { width: 450px; height: 450px; background: #f48fb1; bottom: -100px; right: -50px; }
+        @keyframes float { from { transform: translate(0, 0); } to { transform: translate(40px, 40px); } }
+
+        .main-container { 
+            background: rgba(255, 255, 255, 0.95); 
+            backdrop-filter: blur(20px);
+            padding: 40px; 
+            border-radius: 25px; 
+            box-shadow: 0 20px 50px rgba(233, 30, 99, 0.15); 
+            width: 100%;
+            max-width: 750px; 
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Update: Make heading responsive and prevent line-break */
+        h1.logo-title { 
+            font-family: 'NuralamZainulAbedin', 'EkushRegular', sans-serif; 
+            color: var(--primary-pink); 
+            font-size: clamp(30px, 8vw, 45px); 
+            margin-bottom: 5px; 
+            text-align: center; 
+            text-shadow: 2px 2px 4px rgba(233, 30, 99, 0.1); 
+            white-space: nowrap; 
+        }
+        
+        .subtitle { color: var(--text-muted); font-size: 16px; margin-bottom: 30px; text-align: center; font-weight: bold; }
+
+        /* Tabs */
+        .user-tabs { display: flex; background: #f5f5f5; border-radius: 12px; margin-bottom: 25px; overflow: hidden; border: 1px solid #e0e0e0; }
+        .u-tab { flex: 1; padding: 15px; text-align: center; cursor: pointer; font-weight: bold; color: var(--text-muted); }
+        .u-tab.active { background: var(--baby-pink); color: var(--primary-pink); border-bottom: 3px solid var(--primary-pink); }
+
+        .info-card { background: var(--baby-pink); padding: 20px; border-radius: 12px; font-size: 14px; color: var(--text-dark); margin-bottom: 25px; border-left: 5px solid var(--primary-pink); line-height: 1.6; font-weight: 500; }
+
+        .input-label { font-weight: bold; color: var(--primary-pink); display: block; margin: 15px 0 8px 0; font-size: 15px; }
+        
+        input[type="text"], select, textarea, input[type="file"] { 
+            width: 100%; 
+            margin-bottom: 10px; 
+            padding: 15px; 
+            background: #ffffff; 
+            border: 2px solid var(--light-pink); 
+            border-radius: 12px; 
+            color: var(--text-dark); 
+            font-family: 'Kalpurush', Arial, sans-serif; 
+            font-size: 16px; 
+            outline: none; 
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.02);
+        }
+        input[type="text"]:focus, textarea:focus, select:focus { border-color: var(--primary-pink); box-shadow: 0 0 10px rgba(233, 30, 99, 0.2); }
+        
+        textarea { resize: vertical; min-height: 200px; }
+
+        /* Mentor Info Text */
+        .mentor-assigned-info { font-size: 14px; color: var(--secondary-pink); font-weight: bold; margin-bottom: 20px; padding: 10px; background: #fffafb; border-radius: 8px; border: 1px dashed var(--secondary-pink); text-align: center; }
+
+        /* Buttons */
+        .btn-action { width: 100%; padding: 16px; background: linear-gradient(45deg, var(--primary-pink), var(--secondary-pink)); color: #fff; border: none; border-radius: 12px; font-weight: bold; font-size: 18px; cursor: pointer; font-family: 'Kalpurush', Arial, sans-serif; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 8px 20px rgba(233, 30, 99, 0.3); }
+        .btn-action:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(233, 30, 99, 0.4); }
+        .btn-action:disabled { background: #e0e0e0; color: #9e9e9e; cursor: not-allowed; box-shadow: none; }
+
+        .btn-outline { width: 100%; padding: 12px; background: transparent; color: var(--text-muted); border: 2px solid var(--text-muted); border-radius: 12px; font-weight: bold; font-size: 15px; cursor: pointer; margin-top: 30px; font-family: 'Kalpurush', Arial, sans-serif; }
+        .btn-outline:hover { background: var(--text-muted); color: #fff; }
+
+        /* Status & Feedback Cards for User */
+        .user-feedback-card { background: #ffffff; padding: 25px; border-radius: 15px; margin-bottom: 20px; box-shadow: var(--card-shadow); border: 1px solid var(--light-pink); }
+        .status-badge { display: inline-block; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; margin-bottom: 10px; }
+        .status-not-yet { background: #eeeeee; color: #616161; }
+        .status-process { background: #fff3e0; color: #f57c00; }
+        .status-complete { background: #e8f5e9; color: #2e7d32; }
+
+        .decision-badge { display: inline-block; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; margin-bottom: 10px; margin-left: 5px; }
+        .decision-pending { background: #e3f2fd; color: #1976d2; }
+        .decision-granted { background: #4caf50; color: white; }
+        .decision-rejected { background: #f44336; color: white; }
+
+        .remarks-box { background: var(--baby-pink); padding: 15px; border-radius: 10px; margin-top: 15px; border-left: 4px solid var(--primary-pink); }
+        
+        .story-content-box { background: #f9f9f9; padding: 15px; border-radius: 8px; margin-top: 10px; max-height: 250px; overflow-y: auto; font-size: 15px; line-height: 1.8; color: var(--text-dark); white-space: pre-wrap; border: 1px solid #eee; }
+
+        /* Mandatory Star Mark */
+        .required-star { color: var(--primary-pink); font-size: 18px; font-weight: bold; margin-left: 4px; }
+
+        /* Dashboard specific */
+        .dashboard-container { display: none; width: 100%; max-width: 900px; }
+        .navbar { display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 15px 20px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid var(--light-pink); }
+        .logout-btn { background: transparent; color: var(--error-red); border: 1px solid var(--error-red); padding: 6px 12px; border-radius: 8px; cursor: pointer; font-weight: bold; font-family: 'Kalpurush', Arial, sans-serif;}
+        .logout-btn:hover { background: var(--error-red); color: white; }
+
+        /* Master Controls */
+        .master-panel { background: #fff3e0; padding: 20px; border-radius: 12px; margin-bottom: 25px; border: 1px solid #ffe0b2; display: flex; align-items: center; justify-content: space-between; }
+        .switch { position: relative; display: inline-block; width: 46px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; border-radius: 34px; transition: .4s; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; border-radius: 50%; transition: .4s; }
+        input:checked + .slider { background-color: var(--success-green); }
+        input:checked + .slider:before { transform: translateX(22px); }
+
+        /* Mentor Review Controls */
+        .review-controls { background: #fafafa; padding: 20px; border-radius: 12px; margin-top: 15px; border: 1px solid #e0e0e0; }
+        .control-row { display: flex; gap: 15px; margin-bottom: 15px; align-items: center; flex-wrap: wrap; }
+        .action-btn { padding: 10px 20px; border-radius: 8px; font-weight: bold; border: none; cursor: pointer; color: white; flex: 1; min-width: 120px; font-family: 'Kalpurush', Arial, sans-serif;}
+        .btn-grant { background: var(--success-green); }
+        .btn-reject { background: var(--error-red); }
+        .btn-save { background: var(--primary-pink); width: 100%; margin-top: 10px; }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: var(--secondary-pink); border-radius: 10px; }
+
+        #upload-status { text-align: center; margin-top: 15px; font-weight: bold; font-size: 15px; color: var(--primary-pink); }
+    </style>
+</head>
+<body>
+
+<div class="bg-circle c1"></div>
+<div class="bg-circle c2"></div>
+
+<!-- 1. USER INTERFACE -->
+<div class="main-container" id="userPanel">
+    <h1 class="logo-title">✍️ গল্পপাঠান</h1>
+    <p class="subtitle">পার্মানেন্ট স্টোরি পাবলিকেশন ও রিভিউ পোর্টাল</p>
+
+    <!-- User Toggle Tabs -->
+    <div class="user-tabs">
+        <div class="u-tab active" onclick="switchUserTab('upload')">গল্প জমা দিন</div>
+        <div class="u-tab" onclick="switchUserTab('feedback')">আমার গল্প ও স্ট্যাটাস</div>
+    </div>
+
+    <!-- Submit Section -->
+    <div id="uploadSection">
+        <div class="info-card">
+            <b>নিয়মাবলী:</b><br>
+            ১. আপনার লেখা মৌলিক গল্প জমা দিন। গল্পগুলো পার্মানেন্টলি সেভ থাকবে।<br>
+            ২. গল্পের শব্দসংখ্যা ন্যূনতম ৫০০০ হতে হবে। AI (কৃত্রিম বুদ্ধিমত্তা) দ্বারা লিখিত গল্প সম্পূর্ণ বাতিল (Reject) বলে গণ্য হবে।<br>
+            ৩. আপনার গল্প গৃহীত হলো নাকি বাতিল, তা 'আমার গল্প ও স্ট্যাটাস' ট্যাবে দেখতে পাবেন।<br>
+            ৪. গল্প জমা দেওয়ার মাধ্যমে আপনি সজ্ঞানে গল্পের সম্প্রচার ও প্রকাশনার স্বত্ব (Copyright) আমাদের চ্যানেলকে প্রদান করছেন। ভবিষ্যতে এই গল্পের উপর কোনো প্রকার স্বত্ব বা আইনি দাবি গ্রহণযোগ্য হবে না।
+        </div>
+
+        <form id="storyForm">
+            <label class="input-label">লেখকের নাম:<span class="required-star">*</span></label>
+            <input type="text" id="authorName" placeholder="আপনার সম্পূর্ণ নাম লিখুন" required>
+
+            <label class="input-label">গল্পের শিরোনাম:<span class="required-star">*</span></label>
+            <input type="text" id="storyTitle" placeholder="গল্পের নাম" required>
+
+            <label class="input-label">গল্পের ধরন (ক্যাটাগরি):<span class="required-star">*</span></label>
+            <select id="storyCategory" onchange="updateAssignedMentorInfo()" required>
+                <option value="" disabled selected>ক্যাটাগরি সিলেক্ট করুন</option>
+                <option value="রোমান্টিক">রোমান্টিক</option>
+                <option value="সামাজিক">সামাজিক</option>
+                <option value="ক্লাসিক">ক্লাসিক</option>
+                <option value="হরর">হরর</option>
+                <option value="থ্রিলার">থ্রিলার</option>
+                <option value="অন্যান্য">অন্যান্য (নিজে লিখুন)</option>
+            </select>
+
+            <!-- Dynamic Category Input for 'Others' -->
+            <input type="text" id="otherCategoryInput" placeholder="গল্পের ক্যাটাগরি লিখুন *" style="display:none;">
+
+            <div id="assignedMentorInfo" class="mentor-assigned-info" style="display:none;"></div>
+
+            <label class="input-label">গল্প পাঠানোর মাধ্যম:<span class="required-star">*</span></label>
+            <select id="submissionType" onchange="toggleSubmissionMethod()" required>
+                <option value="text">লিখে জমা দিন (টাইপ বা কপি-পেস্ট)</option>
+                <option value="doc">ডক ফাইল আপলোড করুন (.doc, .docx)</option>
+                <option value="pdf" id="pdfOption" style="display:none;">পিডিএফ আপলোড করুন (.pdf)</option>
+            </select>
+
+            <label class="input-label" id="dynamicInputLabel">গল্পের বিবরণ / ফাইল আপলোড:<span class="required-star">*</span></label>
+            <!-- Dynamic Input Areas -->
+            <div id="textInputArea">
+                <textarea id="storyText" placeholder="এখানে আপনার সম্পূর্ণ গল্পটি লিখুন..."></textarea>
+            </div>
+
+            <div id="fileInputArea" style="display:none;">
+                <input type="file" id="storyFile" accept=".doc,.docx,.pdf">
+                <p style="font-size: 12px; color: var(--text-muted); margin-top: -5px; margin-bottom: 15px;">সঠিক ফরম্যাটের ফাইল সিলেক্ট করুন।</p>
+            </div>
+
+            <button type="submit" class="btn-action" id="btnSubmit"><i class="fas fa-paper-plane"></i> গল্প পাঠান</button>
+        </form>
+        <div id="upload-status"></div>
+    </div>
+
+    <!-- User Feedback Section -->
+    <div id="feedbackSection" style="display:none;">
+        <h3 style="color:var(--primary-pink); margin-bottom: 15px; text-align: center;">আপনার পাঠানো গল্পের বর্তমান অবস্থা</h3>
+        <div id="myStoryList"></div>
+    </div>
+
+    <button id="btnMentorLogin" class="btn-outline" onclick="openMentorLogin()">
+        <i class="fas fa-lock"></i> রিভিউয়ার প্যানেল লগইন
+    </button>
+</div>
+
+<!-- 2. MENTOR DASHBOARD -->
+<div class="main-container dashboard-container" id="mentorPanel">
+    <div class="navbar">
+        <span id="nameTag" style="color: var(--primary-pink); font-weight: bold; font-size: 18px;"></span>
+        <button onclick="exitDashboard()" class="logout-btn"><i class="fas fa-sign-out-alt"></i> লগ আউট</button>
+    </div>
+
+    <!-- Admin Tools -->
+    <div class="master-panel" id="adminControls" style="display: none;">
+        <div style="display:flex; align-items:center; gap:10px;">
+            <i class="fas fa-file-pdf" style="font-size: 24px; color: var(--error-red);"></i>
+            <div>
+                <b style="color:var(--text-dark); display:block; font-size: 15px;">PDF আপলোডের অনুমতি দিন</b>
+                <span style="font-size:12px; color:var(--text-muted);" id="pdfStatusLabel">বর্তমানে বন্ধ আছে</span>
+            </div>
+        </div>
+        <label class="switch">
+            <input type="checkbox" id="masterPdfSwitch" onchange="updatePdfPermissionGlobal(this.checked)">
+            <span class="slider"></span>
+        </label>
+    </div>
+
+    <h3 style="text-align:center; border-bottom: 2px solid var(--light-pink); padding-bottom: 15px; margin-bottom: 20px; color: var(--primary-pink);">📥 আপনার জন্য নির্ধারিত গল্পসমূহ</h3>
+    <div id="inboxList"></div>
+</div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+
+<script>
+    /* CORE LOGIC - GOLPO PATHAN PORTAL */
+
+    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+        apiKey: "AIzaSyCjrGdZMocegvJBIXKI5UKAfzFK7k3-iKI", 
+        projectId: "prothomkotha-2002"
+    };
+    const appId = typeof __app_id !== 'undefined' ? __app_id : "golposolpo-premium";
+    
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+
+    const CLOUD_NAME = 'dy9bujsit'; 
+    const UPLOAD_PRESET = 'Prothom Kotha Voice';
+    
+    const getRef = (col) => db.collection('artifacts').doc(appId).collection('public').doc('data').collection(col);
+
+    let activeMentor = "";
+    let isMaster = false;
+    let isPdfAllowedGlobal = false;
+    
+    let myStoryIds = JSON.parse(localStorage.getItem('my_golpo_ids')) || [];
+
+    // Mapping Mentors based on Category
+    const MENTOR_NEHA = "শুচিস্মিতা নেহা";
+    const MENTOR_TONIMA = "তনিমা সাহা";
+
+    window.onload = async function() {
+        try {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                await auth.signInWithCustomToken(__initial_auth_token);
+            } else {
+                await auth.signInAnonymously();
+            }
+        } catch (err) {
+            console.error("Auth Fail:", err);
+            document.getElementById('upload-status').innerText = "সার্ভার কানেকশন এরর!";
+        }
+
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                listenSystemSettings();
+                loadMyFeedback();
+            }
+        });
+    };
+
+    // --- UI LOGICS ---
+    window.switchUserTab = function(tabName) {
+        document.querySelectorAll('.u-tab').forEach(t => t.classList.remove('active'));
+        if(tabName === 'upload') {
+            document.querySelector('.u-tab:nth-child(1)').classList.add('active');
+            document.getElementById('uploadSection').style.display = 'block';
+            document.getElementById('feedbackSection').style.display = 'none';
+        } else {
+            document.querySelector('.u-tab:nth-child(2)').classList.add('active');
+            document.getElementById('uploadSection').style.display = 'none';
+            document.getElementById('feedbackSection').style.display = 'block';
+            loadMyFeedback();
+        }
+    }
+
+    window.updateAssignedMentorInfo = function() {
+        const cat = document.getElementById('storyCategory').value;
+        const infoDiv = document.getElementById('assignedMentorInfo');
+        const otherCatInput = document.getElementById('otherCategoryInput');
+        
+        if(!cat) {
+            infoDiv.style.display = 'none';
+            otherCatInput.style.display = 'none';
+            otherCatInput.required = false;
+            return;
+        }
+
+        if (cat === 'অন্যান্য') {
+            otherCatInput.style.display = 'block';
+            otherCatInput.required = true;
+        } else {
+            otherCatInput.style.display = 'none';
+            otherCatInput.required = false;
+            otherCatInput.value = '';
+        }
+
+        let mentor = "";
+        if (['রোমান্টিক', 'সামাজিক', 'ক্লাসিক'].includes(cat)) mentor = MENTOR_NEHA;
+        else if (['হরর', 'থ্রিলার'].includes(cat)) mentor = MENTOR_TONIMA;
+        else if (cat === 'অন্যান্য') mentor = "উভয় মেন্টর (যেকোনো একজন গ্রহণ করবেন)";
+
+        infoDiv.innerHTML = `👩‍🏫 এই গল্পটি <b>${mentor}</b> রিভিউ করবেন।`;
+        infoDiv.style.display = 'block';
+    }
+
+    window.toggleSubmissionMethod = function() {
+        const type = document.getElementById('submissionType').value;
+        const textArea = document.getElementById('textInputArea');
+        const fileArea = document.getElementById('fileInputArea');
+        const fileInput = document.getElementById('storyFile');
+
+        if(type === 'text') {
+            textArea.style.display = 'block';
+            fileArea.style.display = 'none';
+        } else {
+            textArea.style.display = 'none';
+            fileArea.style.display = 'block';
+            if(type === 'doc') fileInput.accept = ".doc,.docx";
+            if(type === 'pdf') fileInput.accept = ".pdf";
+        }
+    }
+
+    function listenSystemSettings() {
+        getRef('settings').doc('systemControl').onSnapshot(doc => {
+            const data = doc.exists ? doc.data() : null;
+            isPdfAllowedGlobal = data ? data.allowPdf : false;
+            
+            const pdfOpt = document.getElementById('pdfOption');
+            if(pdfOpt) pdfOpt.style.display = isPdfAllowedGlobal ? 'block' : 'none';
+
+            if (isMaster && document.getElementById('masterPdfSwitch')) {
+                document.getElementById('masterPdfSwitch').checked = isPdfAllowedGlobal;
+                document.getElementById('pdfStatusLabel').innerText = isPdfAllowedGlobal ? "অনুমতি দেওয়া আছে" : "বন্ধ আছে";
+            }
+        });
+    }
+
+    // --- STORY SUBMISSION ---
+    document.getElementById('storyForm').onsubmit = async function(e) {
+        e.preventDefault();
+        
+        const btn = document.getElementById('btnSubmit');
+        const statusDiv = document.getElementById('upload-status');
+        
+        let cat = document.getElementById('storyCategory').value;
+        if(!cat) return alert("দয়া করে গল্পের ক্যাটাগরি সিলেক্ট করুন!");
+
+        let finalCategory = cat;
+        if (cat === 'অন্যান্য') {
+            finalCategory = document.getElementById('otherCategoryInput').value.trim();
+            if (!finalCategory) return alert("দয়া করে গল্পের ক্যাটাগরি লিখে জানান!");
+        }
+
+        const subType = document.getElementById('submissionType').value;
+        let textContent = document.getElementById('storyText').value;
+        const fileObj = document.getElementById('storyFile').files[0];
+
+        if (subType === 'text') {
+            if (!textContent.trim()) return alert("গল্পের অংশ ফাঁকা রাখা যাবে না!");
+            
+            // 5000 word limit validation
+            const wordCount = textContent.trim().split(/\s+/).filter(word => word.length > 0).length;
+            if (wordCount < 5000) {
+                return alert(`দুঃখিত! গল্পের শব্দসংখ্যা ন্যূনতম ৫০০০ হতে হবে। আপনার গল্পে মাত্র ${wordCount} শব্দ আছে।`);
+            }
+        }
+        
+        if ((subType === 'doc' || subType === 'pdf') && !fileObj) return alert("ফাইল সিলেক্ট করুন!");
+
+        // Auto Assign Mentor
+        let assignedMentor = "Both";
+        if (['রোমান্টিক', 'সামাজিক', 'ক্লাসিক'].includes(cat)) assignedMentor = MENTOR_NEHA;
+        else if (['হরর', 'থ্রিলার'].includes(cat)) assignedMentor = MENTOR_TONIMA;
+
+        btn.disabled = true;
+        statusDiv.innerHTML = "⏳ সার্ভারে জমা হচ্ছে, দয়া করে অপেক্ষা করুন...";
+
+        let fileUrl = "";
+
+        // File Upload Logic using Cloudinary Raw
+        if (subType === 'doc' || subType === 'pdf') {
+            const fd = new FormData();
+            fd.append('file', fileObj);
+            fd.append('upload_preset', UPLOAD_PRESET);
+            
+            try {
+                // Endpoint handles all raw files if preset permits
+                const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, { method: 'POST', body: fd });
+                const data = await res.json();
+                if (data.secure_url) fileUrl = data.secure_url;
+                else throw new Error("Cloudinary upload failed");
+            } catch (err) {
+                statusDiv.innerHTML = "❌ ফাইল আপলোড ব্যর্থ হয়েছে! (শুধু টেক্সট হিসেবে পাঠাতে পারেন)";
+                btn.disabled = false;
+                return;
+            }
+        }
+
+        const payload = {
+            authorName: document.getElementById('authorName').value,
+            storyTitle: document.getElementById('storyTitle').value,
+            category: finalCategory,
+            submissionType: subType,
+            storyText: textContent,
+            fileUrl: fileUrl,
+            assignedMentor: assignedMentor,
+            readStatus: "Not Yet", // 'Not Yet', 'On Process', 'Complete'
+            decision: "Pending", // 'Pending', 'Granted', 'Rejected'
+            remarks: "",
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        try {
+            const docRef = await getRef('stories').add(payload);
+            myStoryIds.push(docRef.id);
+            localStorage.setItem('my_golpo_ids', JSON.stringify(myStoryIds));
+
+            statusDiv.innerHTML = "✅ আপনার গল্প সফলভাবে জমা হয়েছে!";
+            this.reset();
+            updateAssignedMentorInfo();
+            toggleSubmissionMethod();
+            
+            setTimeout(() => { statusDiv.innerHTML = ""; btn.disabled = false; }, 3000);
+        } catch (err) { 
+            statusDiv.innerHTML = "❌ ডাটাবেস এরর!"; 
+            btn.disabled = false;
+        }
+    };
+
+    // --- USER FEEDBACK DISPLAY ---
+    function loadMyFeedback() {
+        const listDiv = document.getElementById('myStoryList');
+        if(myStoryIds.length === 0) {
+            listDiv.innerHTML = "<p style='text-align:center; color:var(--text-muted);'>আপনি এখনো কোনো গল্প জমা দেননি।</p>";
+            return;
+        }
+
+        getRef('stories').onSnapshot(snap => {
+            let html = "";
+            let count = 0;
+
+            snap.forEach(doc => {
+                if (myStoryIds.includes(doc.id)) {
+                    count++;
+                    const data = doc.data();
+                    
+                    // Status Badge Logic
+                    let statClass = "status-not-yet";
+                    let statText = "এখনো পড়া হয়নি";
+                    if(data.readStatus === "On Process") { statClass = "status-process"; statText = "পড়া চলছে..."; }
+                    else if(data.readStatus === "Complete") { statClass = "status-complete"; statText = "পড়া শেষ"; }
+
+                    // Decision Badge Logic
+                    let decClass = "decision-pending";
+                    let decText = "অপেক্ষমাণ";
+                    if(data.decision === "Granted") { decClass = "decision-granted"; decText = "গৃহীত (Granted)"; }
+                    else if(data.decision === "Rejected") { decClass = "decision-rejected"; decText = "বাতিল (Rejected)"; }
+
+                    // Story format visual
+                    let storyDisplay = "";
+                    if(data.submissionType === 'text') {
+                        storyDisplay = `
+                            <button onclick="document.getElementById('st_${doc.id}').style.display='block'" class="btn-outline" style="margin-top:10px; padding:8px;">আপনার গল্পটি দেখুন</button>
+                            <div id="st_${doc.id}" class="story-content-box" style="display:none;">${data.storyText}</div>
+                        `;
+                    } else {
+                        storyDisplay = `<a href="${data.fileUrl}" target="_blank" class="btn-outline" style="display:inline-block; margin-top:10px; padding:8px; text-decoration:none; text-align:center;">ফাইল ডাউনলোড করুন</a>`;
+                    }
+
+                    let displayMentor = data.assignedMentor === "Both" ? "উভয় মেন্টর" : data.assignedMentor;
+
+                    html += `
+                        <div class="user-feedback-card">
+                            <p style="font-weight:bold; font-size:20px; color:var(--primary-pink); margin-bottom:5px;">${data.storyTitle}</p>
+                            <p style="font-size:13px; color:var(--text-muted); margin-bottom:15px;">ক্যাটাগরি: ${data.category} | মেন্টর: ${displayMentor}</p>
+                            
+                            <div>
+                                <span class="status-badge ${statClass}">${statText}</span>
+                                <span class="decision-badge ${decClass}">${decText}</span>
+                            </div>
+                            
+                            ${storyDisplay}
+                            
+                            ${data.remarks ? `
+                            <div class="remarks-box">
+                                <b style="color:var(--primary-pink); font-size:13px;">মেন্টরের মতামত (Remarks):</b>
+                                <p style="font-size:15px; margin-top:5px; color:var(--text-dark);">${data.remarks}</p>
+                            </div>` : ''}
+                        </div>
+                    `;
+                }
+            });
+            listDiv.innerHTML = count === 0 ? "<p style='text-align:center;'>কোনো ডাটা পাওয়া যায়নি।</p>" : html;
+        });
+    }
+
+    // --- MENTOR LOGIN & DASHBOARD ---
+    window.openMentorLogin = function() {
+        const pass = prompt("রিভিউয়ার পাসওয়ার্ড দিন:");
+        // Maps
+        const map = { 
+            "Neha123": MENTOR_NEHA, 
+            "Tonima123": MENTOR_TONIMA, 
+            "Master2002": "All" 
+        };
+
+        if (map[pass]) {
+            activeMentor = map[pass];
+            isMaster = (activeMentor === "All");
+
+            document.getElementById('userPanel').style.display = 'none';
+            document.getElementById('mentorPanel').style.display = 'block';
+            document.getElementById('nameTag').innerText = isMaster ? "👤 মাস্টার অ্যাডমিন" : `👤 রিভিউয়ার: ${activeMentor}`;
+            
+            if (isMaster) {
+                document.getElementById('adminControls').style.display = 'flex';
+                // Trigger UI update
+                listenSystemSettings();
+            }
+            startMentorInboxListener();
+        } else { alert("ভুল পাসওয়ার্ড!"); }
+    };
+
+    async function updatePdfPermissionGlobal(val) {
+        if (!isMaster) return;
+        await getRef('settings').doc('systemControl').set({ allowPdf: val }, { merge: true });
+    }
+
+    function startMentorInboxListener() {
+        getRef('stories').onSnapshot(snap => {
+            const list = document.getElementById('inboxList');
+            let dataArr = [];
+
+            snap.forEach(doc => {
+                const d = doc.data();
+                const ts = d.timestamp ? d.timestamp.toMillis() : Date.now();
+                
+                // Show if master OR assigned to this mentor OR assigned to "Both"
+                if (isMaster || d.assignedMentor === activeMentor || d.assignedMentor === "Both") {
+                    dataArr.push({ id: doc.id, ...d, ts: ts });
+                }
+            });
+
+            dataArr.sort((a, b) => b.ts - a.ts);
+            list.innerHTML = "";
+
+            dataArr.forEach(item => {
+                let storyDisplay = "";
+                if(item.submissionType === 'text') {
+                    storyDisplay = `<div class="story-content-box">${item.storyText}</div>`;
+                } else {
+                    storyDisplay = `<div style="margin: 15px 0;"><a href="${item.fileUrl}" target="_blank" style="color:var(--primary-pink); font-weight:bold; text-decoration:underline;">📥 অ্যাটাচড ফাইলটি ডাউনলোড করে পড়ুন</a></div>`;
+                }
+                
+                let displayMentor = item.assignedMentor === "Both" ? "উভয় মেন্টর" : item.assignedMentor;
+
+                list.innerHTML += `
+                    <div class="user-feedback-card">
+                        <span style="float:right; font-size:12px; color:#888;">${new Date(item.ts).toLocaleTimeString()}</span>
+                        <p style="font-size:20px; font-weight:bold; color:var(--primary-pink);">${item.storyTitle}</p>
+                        <p style="font-size:13px; color:var(--text-muted); margin-bottom:10px;">লেখক: <b>${item.authorName}</b> | ক্যাটাগরি: ${item.category} ${isMaster || item.assignedMentor === "Both" ? `| মেন্টর: ${displayMentor}` : ''}</p>
+                        
+                        ${storyDisplay}
+                        
+                        <div class="review-controls">
+                            <div class="control-row">
+                                <label style="font-weight:bold; font-size:14px; color:var(--text-dark);">বর্তমান স্ট্যাটাস:</label>
+                                <select onchange="updateStoryField('${item.id}', 'readStatus', this.value)" style="flex:1; margin-bottom:0; padding:10px;">
+                                    <option value="Not Yet" ${item.readStatus==='Not Yet'?'selected':''}>এখনো পড়া হয়নি (Not Yet)</option>
+                                    <option value="On Process" ${item.readStatus==='On Process'?'selected':''}>পড়া চলছে (On Process)</option>
+                                    <option value="Complete" ${item.readStatus==='Complete'?'selected':''}>পড়া শেষ (Complete)</option>
+                                </select>
+                            </div>
+                            
+                            <div class="control-row">
+                                <button class="action-btn btn-grant" onclick="updateStoryField('${item.id}', 'decision', 'Granted')">
+                                    <i class="fas fa-check-circle"></i> গৃহীত (Grant) ${item.decision === 'Granted' ? '✅' : ''}
+                                </button>
+                                <button class="action-btn btn-reject" onclick="updateStoryField('${item.id}', 'decision', 'Rejected')">
+                                    <i class="fas fa-times-circle"></i> বাতিল (Reject) ${item.decision === 'Rejected' ? '✅' : ''}
+                                </button>
+                            </div>
+
+                            <textarea id="rem_${item.id}" placeholder="মতামত (Remarks) লিখুন..." style="min-height:80px; margin-bottom:5px;">${item.remarks || ''}</textarea>
+                            <button class="action-btn btn-save" onclick="saveRemarks('${item.id}')">মতামত সেভ করুন</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            if (dataArr.length === 0) list.innerHTML = "<p style='text-align:center; color:var(--text-muted); font-weight:bold;'>আপনার ইনবক্সে কোনো গল্প নেই।</p>";
+        });
+    }
+
+    // --- MENTOR ACTIONS ---
+    window.updateStoryField = async function(docId, field, value) {
+        if (!auth.currentUser) return;
+        try { 
+            let updateData = {};
+            updateData[field] = value;
+            await getRef('stories').doc(docId).update(updateData); 
+        } 
+        catch (e) { alert("আপডেট করতে সমস্যা হয়েছে!"); }
+    };
+
+    window.saveRemarks = async function(docId) {
+        if (!auth.currentUser) return;
+        const text = document.getElementById(`rem_${docId}`).value;
+        try { 
+            await getRef('stories').doc(docId).update({ remarks: text }); 
+            alert("মতামত সফলভাবে সেভ হয়েছে!");
+        } 
+        catch (e) { alert("ত্রুটি!"); }
+    };
+
+    window.exitDashboard = async () => { location.reload(); };
+
+</script>
+</body>
+</html>
