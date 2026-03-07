@@ -110,6 +110,10 @@
         }
         input[type="text"]:focus, textarea:focus, select:focus { border-color: var(--primary-pink); box-shadow: 0 0 10px rgba(233, 30, 99, 0.2); }
         
+        /* Select optgroup styling */
+        optgroup { font-weight: bold; color: var(--primary-pink); background: #fff0f5; }
+        option { font-weight: normal; color: var(--text-dark); background: #ffffff; }
+
         textarea { resize: vertical; min-height: 200px; }
 
         /* Mentor Info Text */
@@ -179,7 +183,11 @@
 
 <!-- 1. USER INTERFACE -->
 <div class="main-container" id="userPanel">
-    <h1 class="logo-title">✍️ গল্পপাঠান</h1>
+    <div style="text-align: center;">
+        <h1 class="logo-title" style="display: inline-block; position: relative;">
+            <span style="position: absolute; right: 100%; margin-right: 10px;">✍️</span>গল্পপাঠান
+        </h1>
+    </div>
     <p class="subtitle">পার্মানেন্ট স্টোরি পাবলিকেশন ও রিভিউ পোর্টাল</p>
 
     <!-- User Toggle Tabs -->
@@ -208,11 +216,26 @@
             <label class="input-label">গল্পের ধরন (ক্যাটাগরি):<span class="required-star">*</span></label>
             <select id="storyCategory" onchange="updateAssignedMentorInfo()" required>
                 <option value="" disabled selected>ক্যাটাগরি সিলেক্ট করুন</option>
-                <option value="রোমান্টিক">রোমান্টিক</option>
-                <option value="সামাজিক">সামাজিক</option>
-                <option value="ক্লাসিক">ক্লাসিক</option>
-                <option value="হরর">হরর</option>
-                <option value="থ্রিলার">থ্রিলার</option>
+                
+                <optgroup label="রোমান্টিক ও সামাজিক চ্যানেল (নেহা)">
+                    <option value="রোমান্টিক">রোমান্টিক (Romantic)</option>
+                    <option value="সামাজিক">সামাজিক (Social)</option>
+                    <option value="বিরহ/ট্র্যাজেডি">বিরহ/ট্র্যাজেডি (Tragedy/Heartbreak)</option>
+                    <option value="ক্লাসিক">ক্লাসিক (Classic)</option>
+                    <option value="কমেডি/হাস্যরসাত্মক">কমেডি/হাস্যরসাত্মক (Comedy)</option>
+                    <option value="পারিবারিক">পারিবারিক (Family Drama)</option>
+                </optgroup>
+                
+                <optgroup label="থ্রিলার ও মিস্ট্রি চ্যানেল (তনিমা)">
+                    <option value="ভূতের গল্প / হরর">ভূতের গল্প / হরর (Horror)</option>
+                    <option value="গোয়েন্দা">গোয়েন্দা (Detective)</option>
+                    <option value="থ্রিলার ও সাসপেন্স">থ্রিলার ও সাসপেন্স (Thriller)</option>
+                    <option value="অ্যাডভেঞ্চার">অ্যাডভেঞ্চার (Adventure)</option>
+                    <option value="সায়েন্স ফিকশন">সায়েন্স ফিকশন (Sci-Fi)</option>
+                    <option value="১৮+ / ডার্ক">১৮+ / ডার্ক (18+ / Dark)</option>
+                    <option value="অ্যাকশন">অ্যাকশন (Action)</option>
+                </optgroup>
+
                 <option value="অন্যান্য">অন্যান্য (নিজে লিখুন)</option>
             </select>
 
@@ -311,8 +334,12 @@
     let myStoryIds = JSON.parse(localStorage.getItem('my_golpo_ids')) || [];
 
     // Mapping Mentors based on Category
-    const MENTOR_NEHA = "শুচিস্মিতা নেহা";
-    const MENTOR_TONIMA = "তনিমা সাহা";
+    const MENTOR_NEHA = "সুচিস্মিতা নেহা";
+    const MENTOR_TANIMA = "তনিমা সাহা";
+
+    // Category Arrays for Logic
+    const nehaCategories = ['রোমান্টিক', 'সামাজিক', 'বিরহ/ট্র্যাজেডি', 'ক্লাসিক', 'কমেডি/হাস্যরসাত্মক', 'পারিবারিক'];
+    const tanimaCategories = ['ভূতের গল্প / হরর', 'গোয়েন্দা', 'থ্রিলার ও সাসপেন্স', 'অ্যাডভেঞ্চার', 'সায়েন্স ফিকশন', '১৮+ / ডার্ক', 'অ্যাকশন'];
 
     window.onload = async function() {
         try {
@@ -371,8 +398,8 @@
         }
 
         let mentor = "";
-        if (['রোমান্টিক', 'সামাজিক', 'ক্লাসিক'].includes(cat)) mentor = MENTOR_NEHA;
-        else if (['হরর', 'থ্রিলার'].includes(cat)) mentor = MENTOR_TONIMA;
+        if (nehaCategories.includes(cat)) mentor = MENTOR_NEHA;
+        else if (tanimaCategories.includes(cat)) mentor = MENTOR_TANIMA;
         else if (cat === 'অন্যান্য') mentor = "উভয় মেন্টর (যেকোনো একজন গ্রহণ করবেন)";
 
         infoDiv.innerHTML = `👩‍🏫 এই গল্পটি <b>${mentor}</b> রিভিউ করবেন।`;
@@ -445,8 +472,8 @@
 
         // Auto Assign Mentor
         let assignedMentor = "Both";
-        if (['রোমান্টিক', 'সামাজিক', 'ক্লাসিক'].includes(cat)) assignedMentor = MENTOR_NEHA;
-        else if (['হরর', 'থ্রিলার'].includes(cat)) assignedMentor = MENTOR_TONIMA;
+        if (nehaCategories.includes(cat)) assignedMentor = MENTOR_NEHA;
+        else if (tanimaCategories.includes(cat)) assignedMentor = MENTOR_TANIMA;
 
         btn.disabled = true;
         statusDiv.innerHTML = "⏳ সার্ভারে জমা হচ্ছে, দয়া করে অপেক্ষা করুন...";
@@ -576,7 +603,7 @@
         // Maps
         const map = { 
             "Neha123": MENTOR_NEHA, 
-            "Tonima123": MENTOR_TONIMA, 
+            "Tanima123": MENTOR_TANIMA, 
             "Master2002": "All" 
         };
 
