@@ -233,7 +233,7 @@
             ১. আপনার লেখা মৌলিক গল্প জমা দিন। গল্পগুলো পার্মানেন্টলি সেভ থাকবে।<br>
             ২. গল্পের শব্দসংখ্যা ন্যূনতম ৫০০০ হতে হবে। AI (কৃত্রিম বুদ্ধিমত্তা) দ্বারা লিখিত গল্প সম্পূর্ণ বাতিল (Reject) বলে গণ্য হবে।<br>
             ৩. আপনার গল্প গৃহীত হলো নাকি বাতিল, তা 'আমার গল্প ও স্ট্যাটাস' ট্যাবে দেখতে পাবেন।<br>
-            ৪. গল্প জমা দেওয়ার মাধ্যমে আপনি সজ্ঞানে গল্পের সম্প্রচার ও প্রকাশনার স্বত্ব (Copyright) আমাদের চ্যানেলকে প্রদান করছেন। ভবিষ্যতে এই গল্পের উপর কোনো প্রকার স্বত্ব বা আইনি দাবি গ্রহণযোগ্য হবে অ্যাকা।
+            ৪. গল্প জমা দেওয়ার মাধ্যমে আপনি সজ্ঞানে গল্পের সম্প্রচার ও প্রকাশনার স্বত্ব (Copyright) আমাদের চ্যানেলকে প্রদান করছেন। ভবিষ্যতে এই গল্পের উপর কোনো প্রকার স্বত্ব বা আইনি দাবি গ্রহণযোগ্য হবে না।
         </div>
 
         <form id="storyForm">
@@ -360,7 +360,7 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 
 <script>
-    /* CORE LOGIC - GOLPO PATHAN PORTAL (V13 - Unified Text & Voice Remarks) */
+    /* CORE LOGIC - GOLPO PATHAN PORTAL (V14 - Listener Bug Fixes & Isolation) */
 
     const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
         apiKey: "AIzaSyCjrGdZMocegvJBIXKI5UKAfzFK7k3-iKI", 
@@ -380,11 +380,12 @@
     let activeMentor = "";
     let isMaster = false;
     let isPdfAllowedGlobal = false;
+    let isUserListenerRunning = false;
     
     let audioRecorder;
     let audioChunks = [];
 
-    // Local Storage tracking
+    // Local Storage tracking - This isolates data to specific device ONLY
     let myStoryIds = JSON.parse(localStorage.getItem('my_golpo_ids')) || [];
     let myKnownStoryStates = JSON.parse(localStorage.getItem('my_known_story_states')) || {};
     let myNotifications = JSON.parse(localStorage.getItem('my_notifications')) || [];
@@ -393,6 +394,10 @@
     // Mapping Channels based on Category
     const MENTOR_NEHA = "প্রেম কুটির";
     const MENTOR_TANIMA = "পাঁচকাহন";
+
+    // Channel Logos (Updated with your direct image links)
+    const LOGO_PREM_KUTIR = "https://i.ibb.co/RkVN8KzW/SAVE-20250210-093153.jpg"; 
+    const LOGO_PANCHKAHON = "https://i.ibb.co/3mb1g37x/SAVE-20250210-093144.jpg";
 
     // Category Arrays for Logic
     const nehaCategories = ['রোমান্টিক', 'সামাজিক', 'বিরহ/ট্র্যাজেডি', 'ক্লাসিক', 'কমেডি/হাস্যরসাত্মক', 'পারিবারিক'];
@@ -412,7 +417,7 @@
         auth.onAuthStateChanged(user => {
             if (user) {
                 listenSystemSettings();
-                loadMyFeedback();
+                startUserStoryListener(); // Single listener initialized here
                 updateNotifBadgeUI();
                 renderNotifications();
                 
@@ -436,7 +441,6 @@
         } else if (tabName === 'feedback') {
             document.querySelector('.u-tab:nth-child(2)').classList.add('active');
             document.getElementById('feedbackSection').style.display = 'block';
-            loadMyFeedback();
         } else if (tabName === 'notifications') {
             document.querySelector('.u-tab:nth-child(3)').classList.add('active');
             document.getElementById('notificationsSection').style.display = 'block';
@@ -598,27 +602,40 @@
 
     // --- NOTIFICATION LOGIC ---
     function processLiveNotifications(docId, currentData) {
-        const prevData = myKnownStoryStates[docId] || {};
+        const prevData = myKnownStoryStates[docId];
+        
+        // Prevent notification trigger on the very first render of a story
+        if (!prevData) {
+            myKnownStoryStates[docId] = currentData;
+            localStorage.setItem('my_known_story_states', JSON.stringify(myKnownStoryStates));
+            return;
+        }
+        
         let newNotifs = [];
 
         if (currentData.assignedMentor !== "Both") {
-            if (currentData.readStatus && prevData.readStatus && currentData.readStatus !== prevData.readStatus) {
+            if (prevData.readStatus && currentData.readStatus !== prevData.readStatus) {
                 newNotifs.push(`আপনার গল্প "${currentData.storyTitle}" এর স্ট্যাটাস পরিবর্তন হয়ে '${currentData.readStatus}' হয়েছে।`);
             }
-            if (currentData.decision && prevData.decision && currentData.decision !== prevData.decision) {
+            if (prevData.decision && currentData.decision !== prevData.decision) {
                 newNotifs.push(`আপনার গল্প "${currentData.storyTitle}" এর চূড়ান্ত সিদ্ধান্ত: ${currentData.decision}`);
             }
-            if ((currentData.remarks && currentData.remarks !== prevData.remarks) || (currentData.remarksVoice && currentData.remarksVoice !== prevData.remarksVoice)) {
-                newNotifs.push(`আপনার গল্প "${currentData.storyTitle}" এ নতুন মতামত/রিমার্কস দেওয়া হয়েছে।`);
+            if (currentData.remarks && currentData.remarks !== prevData.remarks) {
+                newNotifs.push(`আপনার গল্প "${currentData.storyTitle}" এ নতুন টেক্সট মতামত দেওয়া হয়েছে।`);
+            }
+            if (currentData.remarksVoice && currentData.remarksVoice !== prevData.remarksVoice) {
+                newNotifs.push(`আপনার গল্প "${currentData.storyTitle}" এ নতুন ভয়েস মতামত দেওয়া হয়েছে।`);
             }
         } else {
-            if (currentData.readStatus_Neha !== prevData.readStatus_Neha) newNotifs.push(`প্রেম কুটির: গল্প "${currentData.storyTitle}" এর স্ট্যাটাস '${currentData.readStatus_Neha}'।`);
-            if (currentData.decision_Neha !== prevData.decision_Neha) newNotifs.push(`প্রেম কুটির: গল্প "${currentData.storyTitle}" এর সিদ্ধান্ত '${currentData.decision_Neha}'।`);
-            if ((currentData.remarks_Neha !== prevData.remarks_Neha) || (currentData.remarksVoice_Neha !== prevData.remarksVoice_Neha)) newNotifs.push(`প্রেম কুটির: গল্প "${currentData.storyTitle}" এ মতামত/রিমার্কস দেওয়া হয়েছে।`);
+            if (prevData.readStatus_Neha && currentData.readStatus_Neha !== prevData.readStatus_Neha) newNotifs.push(`প্রেম কুটির: গল্প "${currentData.storyTitle}" এর স্ট্যাটাস '${currentData.readStatus_Neha}'।`);
+            if (prevData.decision_Neha && currentData.decision_Neha !== prevData.decision_Neha) newNotifs.push(`প্রেম কুটির: গল্প "${currentData.storyTitle}" এর সিদ্ধান্ত '${currentData.decision_Neha}'।`);
+            if (currentData.remarks_Neha && currentData.remarks_Neha !== prevData.remarks_Neha) newNotifs.push(`প্রেম কুটির: গল্প "${currentData.storyTitle}" এ টেক্সট মতামত দেওয়া হয়েছে।`);
+            if (currentData.remarksVoice_Neha && currentData.remarksVoice_Neha !== prevData.remarksVoice_Neha) newNotifs.push(`প্রেম কুটির: গল্প "${currentData.storyTitle}" এ ভয়েস মতামত দেওয়া হয়েছে।`);
             
-            if (currentData.readStatus_Tanima !== prevData.readStatus_Tanima) newNotifs.push(`পাঁচকাহন: গল্প "${currentData.storyTitle}" এর স্ট্যাটাস '${currentData.readStatus_Tanima}'।`);
-            if (currentData.decision_Tanima !== prevData.decision_Tanima) newNotifs.push(`পাঁচকাহন: গল্প "${currentData.storyTitle}" এর সিদ্ধান্ত '${currentData.decision_Tanima}'।`);
-            if ((currentData.remarks_Tanima !== prevData.remarks_Tanima) || (currentData.remarksVoice_Tanima !== prevData.remarksVoice_Tanima)) newNotifs.push(`পাঁচকাহন: গল্প "${currentData.storyTitle}" এ মতামত/রিমার্কস দেওয়া হয়েছে।`);
+            if (prevData.readStatus_Tanima && currentData.readStatus_Tanima !== prevData.readStatus_Tanima) newNotifs.push(`পাঁচকাহন: গল্প "${currentData.storyTitle}" এর স্ট্যাটাস '${currentData.readStatus_Tanima}'।`);
+            if (prevData.decision_Tanima && currentData.decision_Tanima !== prevData.decision_Tanima) newNotifs.push(`পাঁচকাহন: গল্প "${currentData.storyTitle}" এর সিদ্ধান্ত '${currentData.decision_Tanima}'।`);
+            if (currentData.remarks_Tanima && currentData.remarks_Tanima !== prevData.remarks_Tanima) newNotifs.push(`পাঁচকাহন: গল্প "${currentData.storyTitle}" এ টেক্সট মতামত দেওয়া হয়েছে।`);
+            if (currentData.remarksVoice_Tanima && currentData.remarksVoice_Tanima !== prevData.remarksVoice_Tanima) newNotifs.push(`পাঁচকাহন: গল্প "${currentData.storyTitle}" এ ভয়েস মতামত দেওয়া হয়েছে।`);
         }
 
         if (newNotifs.length > 0) {
@@ -714,23 +731,22 @@
         if(confirm("এটি আপনার লিস্ট থেকে লুকিয়ে ফেলা হবে। আপনি কি নিশ্চিত?")) {
             myStoryIds = myStoryIds.filter(sid => sid !== id);
             localStorage.setItem('my_golpo_ids', JSON.stringify(myStoryIds));
-            loadMyFeedback();
+            const card = document.getElementById(`storyCard_${id}`);
+            if(card) card.style.display = 'none';
         }
     }
 
-    // --- USER FEEDBACK DISPLAY ---
-    function loadMyFeedback() {
-        const listDiv = document.getElementById('myStoryList');
-        if(myStoryIds.length === 0) {
-            listDiv.innerHTML = "<p style='text-align:center; color:var(--text-muted);'>আপনি এখনো কোনো গল্প জমা দেননি বা তালিকা থেকে মুছে দিয়েছেন।</p>";
-            return;
-        }
+    // --- SINGLE USER LISTENER ---
+    function startUserStoryListener() {
+        if(isUserListenerRunning) return; // Prevent duplicate listeners!
+        isUserListenerRunning = true;
 
         getRef('stories').onSnapshot(snap => {
             let html = "";
             let count = 0;
 
             snap.forEach(doc => {
+                // Strictly filter only the stories submitted from this browser!
                 if (myStoryIds.includes(doc.id)) {
                     count++;
                     const data = doc.data();
@@ -760,14 +776,18 @@
                         
                         statusAndDecisionHtml = `
                             <div style="margin-bottom: 10px; padding: 10px; background: #fffafb; border-radius: 8px; border: 1px dashed var(--light-pink);">
-                                <p style="font-size:13px; font-weight:bold; color:var(--primary-pink); margin-bottom:5px;">🏠 প্রেম কুটির:</p>
+                                <p style="font-size:13px; font-weight:bold; color:var(--primary-pink); margin-bottom:5px; display:flex; align-items:center; gap:6px;">
+                                    <img src="${LOGO_PREM_KUTIR}" style="width:18px; height:18px; border-radius:50%; object-fit:cover;"> প্রেম কুটির:
+                                </p>
                                 <span class="status-badge ${getStatClass(stN)}">${getStatText(stN)}</span>
                                 <span class="decision-badge ${getDecClass(dcN)}">${getDecText(dcN)}</span>
                                 ${data.remarks_Neha ? `<p style="font-size:13px; margin-top:5px; color:var(--text-dark);"><b>মতামত:</b> ${data.remarks_Neha}</p>` : ''}
                                 ${data.remarksVoice_Neha ? `<audio controls src="${data.remarksVoice_Neha}" class="audio-player-ui"></audio>` : ''}
                             </div>
                             <div style="margin-bottom: 10px; padding: 10px; background: #fdfbf7; border-radius: 8px; border: 1px dashed #ffe0b2;">
-                                <p style="font-size:13px; font-weight:bold; color:var(--gold-text); margin-bottom:5px;">📖 পাঁচকাহন:</p>
+                                <p style="font-size:13px; font-weight:bold; color:var(--gold-text); margin-bottom:5px; display:flex; align-items:center; gap:6px;">
+                                    <img src="${LOGO_PANCHKAHON}" style="width:18px; height:18px; border-radius:50%; object-fit:cover;"> পাঁচকাহন:
+                                </p>
                                 <span class="status-badge ${getStatClass(stT)}">${getStatText(stT)}</span>
                                 <span class="decision-badge ${getDecClass(dcT)}">${getDecText(dcT)}</span>
                                 ${data.remarks_Tanima ? `<p style="font-size:13px; margin-top:5px; color:var(--text-dark);"><b>মতামত:</b> ${data.remarks_Tanima}</p>` : ''}
@@ -792,7 +812,7 @@
                     }
 
                     html += `
-                        <div class="user-feedback-card">
+                        <div class="user-feedback-card" id="storyCard_${doc.id}">
                             <p style="font-weight:bold; font-size:20px; color:var(--primary-pink); margin-bottom:5px;">${data.storyTitle}</p>
                             <p style="font-size:13px; color:var(--text-muted); margin-bottom:15px;">ক্যাটাগরি: ${data.category}</p>
                             
@@ -806,7 +826,13 @@
                     `;
                 }
             });
-            listDiv.innerHTML = count === 0 ? "<p style='text-align:center; color:var(--text-muted);'>কোনো ডাটা পাওয়া যায়নি।</p>" : html;
+            
+            const listDiv = document.getElementById('myStoryList');
+            if (count === 0) {
+                listDiv.innerHTML = "<p style='text-align:center; color:var(--text-muted);'>আপনি এখনো কোনো গল্প জমা দেননি বা তালিকা থেকে মুছে দিয়েছেন।</p>";
+            } else {
+                listDiv.innerHTML = html;
+            }
         });
     }
 
@@ -1009,30 +1035,31 @@
         
         if (!audioRecorder || audioRecorder.state === "inactive") {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                audioRecorder = new MediaRecorder(stream);
-                audioChunks = [];
-                audioRecorder.ondataavailable = e => audioChunks.push(e.data);
-                audioRecorder.onstop = async () => {
-                    log.innerHTML = "⏳ অডিও আপলোড হচ্ছে, দয়া করে অপেক্ষা করুন...";
-                    const fd = new FormData();
-                    fd.append('file', new Blob(audioChunks, { type: 'audio/webm' }));
-                    fd.append('upload_preset', UPLOAD_PRESET);
-                    
-                    try {
-                        const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/video/upload`, { method: 'POST', body: fd });
-                        const data = await res.json();
-                        if (data.secure_url) {
-                            let actualField = "remarksVoice";
-                            if (assignedMentor === "Both" && !isMaster) {
-                                if (activeMentor === MENTOR_NEHA) actualField = "remarksVoice_Neha";
-                                if (activeMentor === MENTOR_TANIMA) actualField = "remarksVoice_Tanima";
-                            }
-                            let updateData = {};
-                            updateData[actualField] = data.secure_url;
-                            await getRef('stories').doc(docId).update(updateData); 
-                            log.innerHTML = "✅ ভয়েস রিমার্কস সফলভাবে সেভ হয়েছে!";
-                        } else {
+                    if (data.assignedMentor === "Both") {
+                        let stN = data.readStatus_Neha || "Not Yet"; let dcN = data.decision_Neha || "Pending";
+                        let stT = data.readStatus_Tanima || "Not Yet"; let dcT = data.decision_Tanima || "Pending";
+                        
+                        statusAndDecisionHtml = `
+                            <div style="margin-bottom: 10px; padding: 10px; background: #fffafb; border-radius: 8px; border: 1px dashed var(--light-pink);">
+                                <p style="font-size:13px; font-weight:bold; color:var(--primary-pink); margin-bottom:5px; display:flex; align-items:center; gap:6px;">
+                                    <img src="${LOGO_PREM_KUTIR}" style="width:18px; height:18px; border-radius:50%; object-fit:cover;"> প্রেম কুটির:
+                                </p>
+                                <span class="status-badge ${getStatClass(stN)}">${getStatText(stN)}</span>
+                                <span class="decision-badge ${getDecClass(dcN)}">${getDecText(dcN)}</span>
+                                ${data.remarks_Neha ? `<p style="font-size:13px; margin-top:5px; color:var(--text-dark);"><b>মতামত:</b> ${data.remarks_Neha}</p>` : ''}
+                                ${data.remarksVoice_Neha ? `<audio controls src="${data.remarksVoice_Neha}" class="audio-player-ui"></audio>` : ''}
+                            </div>
+                            <div style="margin-bottom: 10px; padding: 10px; background: #fdfbf7; border-radius: 8px; border: 1px dashed #ffe0b2;">
+                                <p style="font-size:13px; font-weight:bold; color:var(--gold-text); margin-bottom:5px; display:flex; align-items:center; gap:6px;">
+                                    <img src="${LOGO_PANCHKAHON}" style="width:18px; height:18px; border-radius:50%; object-fit:cover;"> পাঁচকাহন:
+                                </p>
+                                <span class="status-badge ${getStatClass(stT)}">${getStatText(stT)}</span>
+                                <span class="decision-badge ${getDecClass(dcT)}">${getDecText(dcT)}</span>
+                                ${data.remarks_Tanima ? `<p style="font-size:13px; margin-top:5px; color:var(--text-dark);"><b>মতামত:</b> ${data.remarks_Tanima}</p>` : ''}
+                                ${data.remarksVoice_Tanima ? `<audio controls src="${data.remarksVoice_Tanima}" class="audio-player-ui"></audio>` : ''}
+                            </div>
+                        `;
+                    } else {
                             log.innerHTML = "❌ আপলোড ফেইল হয়েছে! " + (data.error?.message || "");
                         }
                     } catch(e) { log.innerHTML = "❌ সার্ভার এরর!"; }
