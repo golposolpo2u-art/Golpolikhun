@@ -360,7 +360,7 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 
 <script>
-    /* CORE LOGIC - GOLPO PATHAN PORTAL (V14 - Listener Bug Fixes & Isolation) */
+    /* CORE LOGIC - GOLPO PATHAN PORTAL (V15 - Final Fixes) */
 
     const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
         apiKey: "AIzaSyCjrGdZMocegvJBIXKI5UKAfzFK7k3-iKI", 
@@ -395,7 +395,7 @@
     const MENTOR_NEHA = "প্রেম কুটির";
     const MENTOR_TANIMA = "পাঁচকাহন";
 
-    // Channel Logos (Updated with your direct image links)
+    // Channel Logos
     const LOGO_PREM_KUTIR = "https://i.ibb.co/RkVN8KzW/SAVE-20250210-093153.jpg"; 
     const LOGO_PANCHKAHON = "https://i.ibb.co/3mb1g37x/SAVE-20250210-093144.jpg";
 
@@ -604,7 +604,6 @@
     function processLiveNotifications(docId, currentData) {
         const prevData = myKnownStoryStates[docId];
         
-        // Prevent notification trigger on the very first render of a story
         if (!prevData) {
             myKnownStoryStates[docId] = currentData;
             localStorage.setItem('my_known_story_states', JSON.stringify(myKnownStoryStates));
@@ -738,7 +737,7 @@
 
     // --- SINGLE USER LISTENER ---
     function startUserStoryListener() {
-        if(isUserListenerRunning) return; // Prevent duplicate listeners!
+        if(isUserListenerRunning) return; 
         isUserListenerRunning = true;
 
         getRef('stories').onSnapshot(snap => {
@@ -746,7 +745,6 @@
             let count = 0;
 
             snap.forEach(doc => {
-                // Strictly filter only the stories submitted from this browser!
                 if (myStoryIds.includes(doc.id)) {
                     count++;
                     const data = doc.data();
@@ -796,9 +794,12 @@
                         `;
                     } else {
                         let channelName = data.assignedMentor;
+                        let logoSrc = data.assignedMentor === MENTOR_NEHA ? LOGO_PREM_KUTIR : LOGO_PANCHKAHON;
                         statusAndDecisionHtml = `
                             <div style="margin-bottom: 10px;">
-                                <p style="font-size:13px; font-weight:bold; color:var(--text-muted); margin-bottom:5px;">চ্যানেল: ${channelName}</p>
+                                <p style="font-size:13px; font-weight:bold; color:var(--text-muted); margin-bottom:5px; display:flex; align-items:center; gap:6px;">
+                                    <img src="${logoSrc}" style="width:18px; height:18px; border-radius:50%; object-fit:cover;"> চ্যানেল: ${channelName}
+                                </p>
                                 <span class="status-badge ${getStatClass(data.readStatus || "Not Yet")}">${getStatText(data.readStatus || "Not Yet")}</span>
                                 <span class="decision-badge ${getDecClass(data.decision || "Pending")}">${getDecText(data.decision || "Pending")}</span>
                             </div>
@@ -1035,31 +1036,30 @@
         
         if (!audioRecorder || audioRecorder.state === "inactive") {
             try {
-                    if (data.assignedMentor === "Both") {
-                        let stN = data.readStatus_Neha || "Not Yet"; let dcN = data.decision_Neha || "Pending";
-                        let stT = data.readStatus_Tanima || "Not Yet"; let dcT = data.decision_Tanima || "Pending";
-                        
-                        statusAndDecisionHtml = `
-                            <div style="margin-bottom: 10px; padding: 10px; background: #fffafb; border-radius: 8px; border: 1px dashed var(--light-pink);">
-                                <p style="font-size:13px; font-weight:bold; color:var(--primary-pink); margin-bottom:5px; display:flex; align-items:center; gap:6px;">
-                                    <img src="${LOGO_PREM_KUTIR}" style="width:18px; height:18px; border-radius:50%; object-fit:cover;"> প্রেম কুটির:
-                                </p>
-                                <span class="status-badge ${getStatClass(stN)}">${getStatText(stN)}</span>
-                                <span class="decision-badge ${getDecClass(dcN)}">${getDecText(dcN)}</span>
-                                ${data.remarks_Neha ? `<p style="font-size:13px; margin-top:5px; color:var(--text-dark);"><b>মতামত:</b> ${data.remarks_Neha}</p>` : ''}
-                                ${data.remarksVoice_Neha ? `<audio controls src="${data.remarksVoice_Neha}" class="audio-player-ui"></audio>` : ''}
-                            </div>
-                            <div style="margin-bottom: 10px; padding: 10px; background: #fdfbf7; border-radius: 8px; border: 1px dashed #ffe0b2;">
-                                <p style="font-size:13px; font-weight:bold; color:var(--gold-text); margin-bottom:5px; display:flex; align-items:center; gap:6px;">
-                                    <img src="${LOGO_PANCHKAHON}" style="width:18px; height:18px; border-radius:50%; object-fit:cover;"> পাঁচকাহন:
-                                </p>
-                                <span class="status-badge ${getStatClass(stT)}">${getStatText(stT)}</span>
-                                <span class="decision-badge ${getDecClass(dcT)}">${getDecText(dcT)}</span>
-                                ${data.remarks_Tanima ? `<p style="font-size:13px; margin-top:5px; color:var(--text-dark);"><b>মতামত:</b> ${data.remarks_Tanima}</p>` : ''}
-                                ${data.remarksVoice_Tanima ? `<audio controls src="${data.remarksVoice_Tanima}" class="audio-player-ui"></audio>` : ''}
-                            </div>
-                        `;
-                    } else {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                audioRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                audioRecorder.ondataavailable = e => audioChunks.push(e.data);
+                audioRecorder.onstop = async () => {
+                    log.innerHTML = "⏳ অডিও আপলোড হচ্ছে, দয়া করে অপেক্ষা করুন...";
+                    const fd = new FormData();
+                    fd.append('file', new Blob(audioChunks, { type: 'audio/webm' }));
+                    fd.append('upload_preset', UPLOAD_PRESET);
+                    
+                    try {
+                        const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/video/upload`, { method: 'POST', body: fd });
+                        const data = await res.json();
+                        if (data.secure_url) {
+                            let actualField = "remarksVoice";
+                            if (assignedMentor === "Both" && !isMaster) {
+                                if (activeMentor === MENTOR_NEHA) actualField = "remarksVoice_Neha";
+                                if (activeMentor === MENTOR_TANIMA) actualField = "remarksVoice_Tanima";
+                            }
+                            let updateData = {};
+                            updateData[actualField] = data.secure_url;
+                            await getRef('stories').doc(docId).update(updateData); 
+                            log.innerHTML = "✅ ভয়েস রিমার্কস সফলভাবে সেভ হয়েছে!";
+                        } else {
                             log.innerHTML = "❌ আপলোড ফেইল হয়েছে! " + (data.error?.message || "");
                         }
                     } catch(e) { log.innerHTML = "❌ সার্ভার এরর!"; }
