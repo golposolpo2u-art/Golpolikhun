@@ -1,1170 +1,2101 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>গল্পপাঠান - Golposolpo Premium Story Portal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Meetu - Video Call App</title>
     
-    <!-- SEO Optimization Tags -->
-    <meta name="title" content="গল্পপাঠান - Smart Story Portal">
-    <meta name="description" content="Golposolpo premium story submission and review portal.">
+    <!-- PWA Manifest Link Placeholder (Dynamically injected via JS) -->
+    <link rel="manifest" id="manifest-link" href="">
+    <meta name="theme-color" content="#8ab4f8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Meetu">
     
-    <!-- External Resources -->
-    <link href="https://fonts.maateen.me/kalpurush/font.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Google Fonts for UI -->
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Material Icons for UI Buttons -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+    
+    <!-- PeerJS for WebRTC Connection -->
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     
     <style>
-        /* PREMIUM BABY PINK & WHITE THEME */
+        /* =========================================
+           CSS VARIABLES (Theme Colors)
+           ========================================= */
         :root {
-            --primary-pink: #e91e63;
-            --secondary-pink: #f06292;
-            --light-pink: #f8bbd0;
-            --baby-pink: #fce4ec;
-            --pure-white: #ffffff;
-            --text-dark: #212121;
-            --text-muted: #555555;
-            --success-green: #2e7d32;
-            --error-red: #c62828;
-            --gold-text: #f57f17;
-            --glass-border: rgba(233, 30, 99, 0.2);
-            --card-shadow: 0 10px 30px rgba(233, 30, 99, 0.1);
+            --bg-dark: #202124;
+            --surface: #3c4043;
+            --primary: #8ab4f8;
+            --primary-hover: #aecbfa;
+            --danger: #ea4335;
+            --danger-hover: #d93025;
+            --success: #81c995;
+            --text-light: #e8eaed;
+            --text-muted: #9aa0a6;
+            --border: rgba(255,255,255,0.1);
         }
 
-        @font-face {
-            font-family: 'EkushRegular';
-            src: url('Ekush-Regular.ttf') format('truetype');
-        }
-
-        @font-face {
-            font-family: 'NuralamZainulAbedin';
-            src: url('FN%20NuralamZainulAbedin%20Unicode%20Bold.ttf') format('truetype');
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; transition: all 0.3s ease; }
-
+        /* =========================================
+           GLOBAL STYLES
+           ========================================= */
         body { 
-            font-family: 'Kalpurush', Arial, sans-serif; 
-            background: linear-gradient(135deg, #fff0f5 0%, #fce4ec 50%, #f8bbd0 100%);
-            color: var(--text-dark);
-            min-height: 100vh;
+            font-family: 'Google Sans', 'Roboto', sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            background-color: #000;
+            color: var(--text-light); 
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
             display: flex;
-            align-items: flex-start;
-            justify-content: center;
-            padding: 40px 15px;
-            overflow-x: hidden;
+            flex-direction: column;
         }
 
-        /* Background Soft Shapes */
-        .bg-circle { position: fixed; border-radius: 50%; z-index: -1; filter: blur(80px); opacity: 0.6; animation: float 15s infinite alternate; }
-        .c1 { width: 350px; height: 350px; background: #ffffff; top: -50px; left: -50px; }
-        .c2 { width: 450px; height: 450px; background: #f48fb1; bottom: -100px; right: -50px; }
-        @keyframes float { from { transform: translate(0, 0); } to { transform: translate(40px, 40px); } }
+        /* Customizable Video Background */
+        #bgVideo {
+            position: fixed; 
+            top: 50%; 
+            left: 50%; 
+            min-width: 100%; 
+            min-height: 100%;
+            width: auto; 
+            height: auto; 
+            z-index: -1; 
+            transform: translateX(-50%) translateY(-50%);
+            object-fit: cover; 
+            filter: brightness(0.4) saturate(1.2); 
+            transition: all 0.5s ease;
+        }
 
-        .main-container { 
-            background: rgba(255, 255, 255, 0.95); 
-            backdrop-filter: blur(20px);
+        /* =========================================
+           SETUP / LOGIN OVERLAY
+           ========================================= */
+        #setupOverlay {
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%;
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
+            z-index: 100; 
+            background: rgba(0,0,0,0.4); 
+            backdrop-filter: blur(8px);
+        }
+
+        .setup-card {
+            background: var(--surface); 
             padding: 40px; 
-            border-radius: 25px; 
-            box-shadow: 0 20px 50px rgba(233, 30, 99, 0.15); 
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6); 
+            text-align: center;
+            width: 90%; 
+            max-width: 400px; 
+            border: 1px solid var(--border);
+            max-height: 90vh; 
+            overflow-y: auto;
+        }
+
+        .setup-card h1 { 
+            font-size: 28px; 
+            font-weight: 500; 
+            margin: 0 0 10px 0; 
+            color: #fff; 
+        }
+
+        .setup-card p { 
+            color: var(--text-muted); 
+            font-size: 14px; 
+            margin-bottom: 25px; 
+        }
+
+        /* Profile Picture Setup */
+        .profile-setup {
+            position: relative; 
+            width: 100px; 
+            height: 100px; 
+            margin: 0 auto 25px;
+            border-radius: 50%; 
+            border: 3px solid var(--primary); 
+            cursor: pointer;
+            overflow: hidden; 
+            background: var(--bg-dark); 
+            display: block;
+        }
+
+        .profile-setup img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+        }
+
+        .profile-setup .edit-overlay {
+            position: absolute; 
+            bottom: 0; 
+            left: 0; 
+            width: 100%; 
+            background: rgba(0,0,0,0.6);
+            font-size: 12px; 
+            padding: 5px 0; 
+            color: white; 
+            transition: 0.3s;
+        }
+
+        .profile-setup:hover .edit-overlay { 
+            background: rgba(0,0,0,0.8); 
+            padding-bottom: 8px;
+        }
+
+        /* Input Fields */
+        input.meet-input {
+            font-family: inherit; 
+            width: 100%; 
+            padding: 14px; 
+            box-sizing: border-box;
+            border-radius: 8px; 
+            border: 1px solid #5f6368; 
+            background: rgba(0,0,0,0.2);
+            color: white; 
+            font-size: 16px; 
+            margin-bottom: 20px; 
+            text-align: center; 
+            transition: border-color 0.2s;
+        }
+
+        input.meet-input:focus { 
+            outline: none; 
+            border-color: var(--primary); 
+        }
+
+        /* Common Buttons */
+        button { 
+            font-family: inherit; 
+            cursor: pointer; 
+            border: none; 
+            font-weight: 500; 
+            transition: 0.2s; 
+        }
+
+        .btn-main { 
+            width: 100%; 
+            padding: 14px; 
+            border-radius: 8px; 
+            font-size: 16px; 
+            font-weight: 600; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            gap: 8px;
+        }
+
+        .btn-primary { 
+            background: var(--primary); 
+            color: #000; 
+        }
+
+        .btn-primary:hover { 
+            background: var(--primary-hover); 
+        }
+
+        .btn-success { 
+            background: var(--success); 
+            color: #000; 
+        }
+
+        .btn-success:hover { 
+            filter: brightness(1.1); 
+        }
+
+        /* Install App Button */
+        #installAppBtn {
+            display: none; 
+            margin-top: 15px; 
+            background: linear-gradient(45deg, #1a73e8, #8ab4f8);
+            color: white; 
+            padding: 12px; 
+            border-radius: 8px; 
             width: 100%;
-            max-width: 750px; 
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            position: relative;
+            font-weight: bold; 
+            box-shadow: 0 4px 10px rgba(26,115,232,0.4);
+        }
+
+        /* =========================================
+           MAIN VIDEO WORKSPACE
+           ========================================= */
+        #mainWorkspace {
+            flex-grow: 1; 
+            display: none; 
+            padding: 15px; 
+            box-sizing: border-box;
+            height: calc(100vh - 80px); 
+            flex-direction: column;
+        }
+
+        #videoGrid {
+            display: grid; 
+            gap: 15px; 
+            width: 100%; 
+            height: 100%;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-auto-rows: 1fr; 
+            align-content: center; 
+            justify-content: center;
+        }
+
+        .video-box {
+            position: relative; 
+            background: var(--surface); 
+            border-radius: 12px;
+            overflow: hidden; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            border: 1px solid var(--border); 
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
+        }
+
+        .video-box video { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+            transform: scaleX(-1); 
+        }
+
+        .video-box video.screen-share { 
+            transform: scaleX(1); 
+            object-fit: contain; 
+            background: #000;
+        }
+
+        .avatar-fallback {
+            position: absolute; 
+            width: 100px; 
+            height: 100px; 
+            border-radius: 50%;
+            object-fit: cover; 
+            border: 2px solid var(--border); 
+            display: none;
+        }
+
+        .video-overlay {
+            position: absolute; 
+            bottom: 10px; 
+            left: 10px; 
+            background: rgba(0,0,0,0.6); 
+            backdrop-filter: blur(4px);
+            padding: 6px 12px; 
+            border-radius: 20px; 
+            font-size: 13px; 
+            display: flex; 
+            align-items: center; 
+            gap: 6px; 
             z-index: 10;
         }
 
-        /* Responsive centered title with pencil icon */
-        .logo-title-wrapper {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 5px;
+        /* 3-Dot Context Menu */
+        .context-menu-btn {
+            position: absolute; 
+            top: 10px; 
+            right: 10px; 
+            background: rgba(0,0,0,0.6); 
+            border-radius: 50%; 
+            width: 32px; 
+            height: 32px;
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            z-index: 10; 
+            color: white; 
+            opacity: 0; 
+            transition: opacity 0.2s;
         }
-        
-        h1.logo-title { 
-            font-family: 'NuralamZainulAbedin', 'EkushRegular', sans-serif; 
-            color: var(--primary-pink); 
-            font-size: clamp(30px, 8vw, 45px); 
-            text-align: center; 
-            text-shadow: 2px 2px 4px rgba(233, 30, 99, 0.1); 
-            white-space: nowrap; 
-            position: relative;
+
+        .video-box:hover .context-menu-btn { 
+            opacity: 1; 
         }
 
-        .title-icon {
-            position: absolute;
-            right: 100%;
-            margin-right: 10px;
-            font-size: clamp(24px, 6vw, 35px);
+        .user-menu {
+            position: absolute; 
+            top: 45px; 
+            right: 10px; 
+            background: var(--surface); 
+            border-radius: 8px; 
+            padding: 5px 0; 
+            z-index: 20; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5); 
+            border: 1px solid var(--border); 
+            display: none; 
+            min-width: 150px;
         }
-        
-        .subtitle { color: var(--text-muted); font-size: 16px; margin-bottom: 30px; text-align: center; font-weight: bold; }
 
-        /* Tabs */
-        .user-tabs { display: flex; background: #f5f5f5; border-radius: 12px; margin-bottom: 25px; overflow: hidden; border: 1px solid #e0e0e0; flex-wrap: wrap; }
-        .u-tab { flex: 1; padding: 12px; text-align: center; cursor: pointer; font-weight: bold; color: var(--text-muted); font-size: 14px; min-width: 100px; }
-        .u-tab.active { background: var(--baby-pink); color: var(--primary-pink); border-bottom: 3px solid var(--primary-pink); }
-        .notif-badge-icon { background: var(--error-red); color: white; border-radius: 50%; padding: 2px 6px; font-size: 11px; margin-left: 5px; display: none; }
-
-        .info-card { background: var(--baby-pink); padding: 20px; border-radius: 12px; font-size: 14px; color: var(--text-dark); margin-bottom: 25px; border-left: 5px solid var(--primary-pink); line-height: 1.6; font-weight: 500; }
-
-        .input-label { font-weight: bold; color: var(--primary-pink); display: block; margin: 15px 0 8px 0; font-size: 15px; }
-        
-        input[type="text"], select, textarea, input[type="file"] { 
+        .user-menu button {
             width: 100%; 
-            margin-bottom: 10px; 
-            padding: 15px; 
-            background: #ffffff; 
-            border: 2px solid var(--light-pink); 
-            border-radius: 12px; 
-            color: var(--text-dark); 
-            font-family: 'Kalpurush', Arial, sans-serif; 
-            font-size: 16px; 
-            outline: none; 
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.02);
+            background: none; 
+            color: white; 
+            text-align: left; 
+            padding: 10px 15px; 
+            font-size: 14px; 
+            display: flex; 
+            align-items: center; 
+            gap: 10px;
         }
-        input[type="text"]:focus, textarea:focus, select:focus { border-color: var(--primary-pink); box-shadow: 0 0 10px rgba(233, 30, 99, 0.2); }
+
+        .user-menu button:hover { 
+            background: rgba(255,255,255,0.1); 
+        }
+
+        /* =========================================
+           BOTTOM CONTROLS BAR
+           ========================================= */
+        #controlsBar {
+            min-height: 80px; 
+            height: auto; 
+            width: 100%; 
+            background: var(--bg-dark); 
+            display: none; 
+            align-items: center; 
+            justify-content: center;
+            gap: 12px; 
+            border-top: 1px solid var(--border); 
+            z-index: 100; 
+            padding: 10px 15px; 
+            box-sizing: border-box; 
+            flex-wrap: wrap; 
+        }
+
+        .control-btn {
+            width: 50px; 
+            height: 50px; 
+            border-radius: 50%; 
+            background: var(--surface); 
+            color: white;
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            border: 1px solid var(--border); 
+            flex-shrink: 0;
+        }
+
+        .control-btn:hover { 
+            background: #4a4f54; 
+        }
+
+        .control-btn.active { 
+            background: var(--primary); 
+            color: #000; 
+            border-color: var(--primary); 
+        }
+
+        .control-btn.off { 
+            background: var(--danger); 
+            border-color: var(--danger); 
+        }
         
-        optgroup { font-weight: bold; color: var(--primary-pink); background: #fff0f5; }
-        option { font-weight: normal; color: var(--text-dark); background: #ffffff; }
+        .end-call-btn { 
+            width: 70px; 
+            border-radius: 25px; 
+            background: var(--danger); 
+            border-color: var(--danger); 
+        }
 
-        textarea { resize: vertical; min-height: 200px; }
+        .end-call-btn:hover { 
+            background: var(--danger-hover); 
+        }
 
-        .mentor-assigned-info { font-size: 14px; color: var(--secondary-pink); font-weight: bold; margin-bottom: 20px; padding: 10px; background: #fffafb; border-radius: 8px; border: 1px dashed var(--secondary-pink); text-align: center; }
+        .material-symbols-outlined { 
+            font-size: 24px; 
+            font-variation-settings: 'FILL' 1; 
+        }
 
-        /* Buttons */
-        .btn-action { width: 100%; padding: 16px; background: linear-gradient(45deg, var(--primary-pink), var(--secondary-pink)); color: #fff; border: none; border-radius: 12px; font-weight: bold; font-size: 18px; cursor: pointer; font-family: 'Kalpurush', Arial, sans-serif; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 8px 20px rgba(233, 30, 99, 0.3); }
-        .btn-action:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(233, 30, 99, 0.4); }
-        .btn-action:disabled { background: #e0e0e0; color: #9e9e9e; cursor: not-allowed; box-shadow: none; }
+        /* Split Pill Buttons for Mic & Cam */
+        .meet-pill {
+            display: flex; 
+            height: 50px; 
+            background: var(--surface); 
+            border-radius: 25px;
+            border: 1px solid var(--border); 
+            overflow: hidden; 
+            flex-shrink: 0;
+        }
 
-        .btn-outline { width: 100%; padding: 12px; background: transparent; color: var(--text-muted); border: 2px solid var(--text-muted); border-radius: 12px; font-weight: bold; font-size: 15px; cursor: pointer; margin-top: 10px; font-family: 'Kalpurush', Arial, sans-serif; }
-        .btn-outline:hover { background: var(--text-muted); color: #fff; }
-
-        /* Notification Elements */
-        .notif-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: #fff; padding: 15px; border-radius: 12px; border: 1px solid var(--light-pink); flex-wrap: wrap; gap: 10px; }
-        .notif-card { background: #fffafb; border-left: 4px solid var(--primary-pink); padding: 15px; border-radius: 10px; margin-bottom: 10px; position: relative; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .notif-time { font-size: 11px; color: #888; margin-bottom: 5px; display: block; }
-        .notif-msg { font-size: 14px; color: var(--text-dark); line-height: 1.4; }
-        .notif-del-btn { position: absolute; top: 10px; right: 10px; background: transparent; border: none; color: #aaa; cursor: pointer; font-size: 16px; }
-        .notif-del-btn:hover { color: var(--error-red); }
-
-        /* Status & Feedback Cards for User */
-        .user-feedback-card { background: #ffffff; padding: 25px; border-radius: 15px; margin-bottom: 20px; box-shadow: var(--card-shadow); border: 1px solid var(--light-pink); }
-        .status-badge { display: inline-block; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; margin-bottom: 10px; }
-        .status-not-yet { background: #eeeeee; color: #616161; }
-        .status-process { background: #fff3e0; color: #f57c00; }
-        .status-complete { background: #e8f5e9; color: #2e7d32; }
-
-        .decision-badge { display: inline-block; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; margin-bottom: 10px; margin-left: 5px; }
-        .decision-pending { background: #e3f2fd; color: #1976d2; }
-        .decision-granted { background: #4caf50; color: white; }
-        .decision-rejected { background: #f44336; color: white; }
-
-        .remarks-box { background: var(--baby-pink); padding: 15px; border-radius: 10px; margin-top: 15px; border-left: 4px solid var(--primary-pink); }
-        .audio-player-ui { width: 100%; margin-top: 10px; height: 40px; border-radius: 20px; outline: none; }
+        .meet-pill.off { 
+            background: var(--danger); 
+            border-color: var(--danger); 
+        }
         
-        .story-content-box { background: #f9f9f9; padding: 15px; border-radius: 8px; margin-top: 10px; max-height: 250px; overflow-y: auto; font-size: 15px; line-height: 1.8; color: var(--text-dark); white-space: pre-wrap; border: 1px solid #eee; }
+        .meet-pill-main {
+            width: 50px; 
+            background: transparent; 
+            border: none; 
+            color: white; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            cursor: pointer;
+        }
 
-        .required-star { color: var(--primary-pink); font-size: 18px; font-weight: bold; margin-left: 4px; }
-
-        /* Mentor Dashboard */
-        .dashboard-container { display: none; width: 100%; max-width: 900px; }
-        .navbar { display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 15px 20px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid var(--light-pink); }
-        .logout-btn { background: transparent; color: var(--error-red); border: 1px solid var(--error-red); padding: 6px 12px; border-radius: 8px; cursor: pointer; font-weight: bold; font-family: 'Kalpurush', Arial, sans-serif;}
-        .logout-btn:hover { background: var(--error-red); color: white; }
-
-        .master-panel { background: #fff3e0; padding: 20px; border-radius: 12px; margin-bottom: 25px; border: 1px solid #ffe0b2; display: flex; align-items: center; justify-content: space-between; }
-        .switch { position: relative; display: inline-block; width: 46px; height: 24px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; border-radius: 34px; transition: .4s; }
-        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; border-radius: 50%; transition: .4s; }
-        input:checked + .slider { background-color: var(--success-green); }
-        input:checked + .slider:before { transform: translateX(22px); }
-
-        .review-controls { background: #fafafa; padding: 20px; border-radius: 12px; margin-top: 15px; border: 1px solid #e0e0e0; }
-        .control-row { display: flex; gap: 15px; margin-bottom: 15px; align-items: center; flex-wrap: wrap; }
-        .action-btn { padding: 10px 20px; border-radius: 8px; font-weight: bold; border: none; cursor: pointer; color: white; flex: 1; min-width: 120px; font-family: 'Kalpurush', Arial, sans-serif;}
-        .btn-grant { background: var(--success-green); }
-        .btn-reject { background: var(--error-red); }
-        .btn-save { background: var(--primary-pink); flex: 1; }
+        .meet-pill-main:hover { 
+            background: rgba(255,255,255,0.1); 
+        }
         
-        /* Voice Record Button Styling */
-        .voice-record-btn { background: #ff3d00; color: white; padding: 10px 15px; border-radius: 8px; font-weight: bold; border: none; cursor: pointer; font-size: 14px; flex: 1; font-family: 'Kalpurush', Arial, sans-serif; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.3s;}
-        .voice-record-btn:hover { background: #dd2c00; box-shadow: 0 5px 15px rgba(255, 61, 0, 0.3); }
-        .voice-record-btn.recording { animation: pulse-red 1.5s infinite; background: #b20000; }
-        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(255, 61, 0, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(255, 61, 0, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 61, 0, 0); } }
+        .meet-pill-arrow {
+            width: 30px; 
+            background: transparent; 
+            border: none; 
+            color: white; 
+            cursor: pointer;
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            border-left: 1px solid rgba(255,255,255,0.2);
+        }
 
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb { background: var(--secondary-pink); border-radius: 10px; }
-        #upload-status { text-align: center; margin-top: 15px; font-weight: bold; font-size: 15px; color: var(--primary-pink); }
+        .meet-pill-arrow:hover { 
+            background: rgba(255,255,255,0.1); 
+        }
+
+        /* Device Menu Popup */
+        #deviceMenuPopup {
+            position: fixed; 
+            background: var(--surface); 
+            border: 1px solid var(--border); 
+            border-radius: 8px; 
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.5); 
+            z-index: 1000; 
+            display: none; 
+            max-height: 250px; 
+            overflow-y: auto; 
+            min-width: 200px;
+        }
+
+        #deviceMenuPopup button {
+            width: 100%; 
+            text-align: left; 
+            padding: 12px 15px; 
+            color: white; 
+            background: transparent; 
+            border: none; 
+            font-size: 13px; 
+            display: flex; 
+            align-items: center; 
+            gap: 10px;
+        }
+
+        #deviceMenuPopup button:hover { 
+            background: rgba(255,255,255,0.1); 
+        }
+
+        .device-active { 
+            color: var(--primary) !important; 
+            font-weight: bold; 
+        }
+
+        /* =========================================
+           MODALS, SIDEBARS & UTILITIES
+           ========================================= */
+        .modal-overlay {
+            display: none; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%;
+            background: rgba(0,0,0,0.7); 
+            backdrop-filter: blur(3px); 
+            z-index: 2000; 
+            justify-content: center; 
+            align-items: center;
+        }
+
+        .modal-content {
+            background: var(--surface); 
+            padding: 25px; 
+            border-radius: 12px; 
+            width: 320px; 
+            text-align: center; 
+            border: 1px solid var(--border);
+        }
+
+        .modal-buttons { 
+            margin-top: 20px; 
+            display: flex; 
+            justify-content: center; 
+            gap: 10px; 
+        }
+
+        .modal-buttons button { 
+            padding: 10px 20px; 
+            border-radius: 8px; 
+            font-weight: 500; 
+            flex: 1; 
+        }
+
+        #settingsModal .modal-content { 
+            width: 400px; 
+            text-align: left; 
+            max-width: 90%; 
+        }
+
+        .setting-group { 
+            margin-bottom: 20px; 
+        }
+
+        .setting-group label { 
+            display: block; 
+            font-size: 13px; 
+            color: var(--text-muted); 
+            margin-bottom: 8px; 
+        }
+
+        .setting-group select, .setting-group input {
+            width: 100%; 
+            padding: 10px; 
+            border-radius: 6px; 
+            background: var(--bg-dark); 
+            border: 1px solid var(--border); 
+            color: white; 
+            outline: none; 
+            font-family: inherit;
+        }
+
+        /* Sidebars */
+        .sidebar {
+            position: fixed; 
+            right: -350px; 
+            top: 0; 
+            width: 320px; 
+            height: calc(100% - 80px); 
+            background: var(--bg-dark); 
+            border-left: 1px solid var(--border);
+            z-index: 50; 
+            transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            display: flex; 
+            flex-direction: column; 
+            box-shadow: -5px 0 20px rgba(0,0,0,0.5);
+        }
+
+        .sidebar.open { 
+            right: 0; 
+        }
+
+        .sidebar-header { 
+            padding: 15px 20px; 
+            border-bottom: 1px solid var(--border); 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            font-weight: 500;
+        }
+
+        .sidebar-body { 
+            flex-grow: 1; 
+            padding: 15px; 
+            overflow-y: auto; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px; 
+        }
+        
+        .chat-msg { 
+            background: var(--surface); 
+            padding: 10px 14px; 
+            border-radius: 12px; 
+            font-size: 14px; 
+            align-self: flex-start; 
+            max-width: 85%; 
+            word-wrap: break-word;
+        }
+
+        .chat-msg.me { 
+            background: var(--primary); 
+            color: #000; 
+            align-self: flex-end; 
+            border-bottom-right-radius: 2px;
+        }
+
+        .chat-msg.other { 
+            border-bottom-left-radius: 2px; 
+        }
+
+        .chat-msg .sender { 
+            display: block; 
+            font-size: 11px; 
+            opacity: 0.8; 
+            margin-bottom: 4px; 
+            font-weight: 600; 
+        }
+
+        .chat-input-area { 
+            padding: 15px; 
+            border-top: 1px solid var(--border); 
+            display: flex; 
+            gap: 10px; 
+        }
+
+        .chat-input-area input { 
+            flex-grow: 1; 
+            padding: 10px 15px; 
+            border-radius: 20px; 
+            border: none; 
+            background: var(--surface); 
+            color: white; 
+            outline: none; 
+        }
+
+        .chat-input-area button { 
+            border-radius: 50%; 
+            width: 40px; 
+            height: 40px; 
+            background: var(--primary); 
+            color: #000; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+        }
+
+        /* Floating Info Link */
+        #meetingInfo {
+            position: fixed; 
+            bottom: 95px; 
+            left: 20px; 
+            display: none; 
+            background: rgba(32,33,36,0.9); 
+            padding: 10px 15px; 
+            border-radius: 8px;
+            font-size: 14px; 
+            border: 1px solid var(--border); 
+            z-index: 40; 
+            backdrop-filter: blur(5px);
+        }
+
+        /* Toast Notifications */
+        #toast {
+            position: fixed; 
+            bottom: 100px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            background: var(--surface); 
+            padding: 10px 20px; 
+            border-radius: 8px; 
+            font-size: 14px; 
+            display: none; 
+            z-index: 3000; 
+            border: 1px solid var(--border); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5); 
+            white-space: nowrap; 
+            max-width: 90vw; 
+            overflow: hidden; 
+            text-overflow: ellipsis;
+        }
+
+        /* Reaction Animations */
+        #reactionMenu {
+            display: none; 
+            position: absolute; 
+            bottom: 90px; 
+            background: var(--surface); 
+            padding: 10px; 
+            border-radius: 30px; 
+            gap: 10px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5); 
+            border: 1px solid var(--border);
+        }
+
+        .react-btn { 
+            background: transparent; 
+            font-size: 28px; 
+            padding: 5px; 
+            border-radius: 50%; 
+        }
+
+        .react-btn:hover { 
+            background: rgba(255,255,255,0.1); 
+            transform: scale(1.1); 
+        }
+
+        .floating-reaction {
+            position: fixed; 
+            bottom: 100px; 
+            left: 50%; 
+            font-size: 40px; 
+            pointer-events: none; 
+            animation: floatUp 2.5s ease-out forwards; 
+            z-index: 1000;
+        }
+
+        @keyframes floatUp { 
+            0% { transform: translate(-50%, 0) scale(0.5); opacity: 1; } 
+            100% { transform: translate(calc(-50% + (random(100) - 50) * 1px), -300px) scale(1.5); opacity: 0; } 
+        }
+
+        /* =========================================
+           RESPONSIVE MOBILE UI FIXES
+           ========================================= */
+        @media (max-width: 600px) {
+            #videoGrid { 
+                grid-template-columns: 1fr; 
+            }
+            
+            #meetingInfo { 
+                display: none !important; 
+            } 
+            
+            #controlsBar { 
+                padding: 15px 5px 25px 5px; /* Added 25px bottom gap for comfortable mobile touch */
+                gap: 10px; 
+                border-top-left-radius: 15px;
+                border-top-right-radius: 15px;
+            }
+            
+            /* Thicker buttons for mobile */
+            .meet-pill { 
+                height: 55px; 
+            } 
+            
+            .meet-pill-main { 
+                width: 55px; 
+            }
+            
+            .meet-pill-arrow { 
+                width: 35px; 
+            }
+            
+            .control-btn { 
+                width: 55px; 
+                height: 55px; 
+            } 
+            
+            .end-call-btn { 
+                width: 75px; 
+                height: 55px; 
+            }
+        }
     </style>
 </head>
 <body>
 
-<div class="bg-circle c1"></div>
-<div class="bg-circle c2"></div>
+    <!-- Dynamic Video Background Element -->
+    <video autoplay loop muted playsinline id="bgVideo">
+        <source id="bgSource" src="https://videos.pexels.com/video-files/3129671/3129671-hd_1920_1080_30fps.mp4" type="video/mp4">
+    </video>
 
-<!-- Custom Safe Modal UI (Replaces standard blocked alerts & prompts) -->
-<div id="customModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; justify-content:center; align-items:center; backdrop-filter:blur(5px);">
-    <div style="background:#fff; padding:25px; border-radius:15px; max-width:400px; width:90%; text-align:center; color:#333; box-shadow: 0 10px 30px rgba(233,30,99,0.3);">
-        <h3 id="modalTitle" style="color:var(--primary-pink); margin-bottom:15px; font-size: 22px; font-family:'NuralamZainulAbedin', 'Kalpurush', sans-serif;"></h3>
-        <p id="modalMessage" style="font-size:16px; margin-bottom:20px; font-family: 'Kalpurush';"></p>
-        <input type="text" id="modalInput" style="display:none; width:100%; padding:12px; margin-bottom:20px; border:1px solid #ccc; border-radius:8px; font-family: 'Kalpurush'; font-size: 16px; outline:none;">
-        <div style="display:flex; gap:10px; justify-content:center;">
-            <button id="modalBtnCancel" style="display:none; background:#888; color:white; padding:10px 20px; border:none; border-radius:8px; cursor:pointer; font-family: 'Kalpurush'; font-weight: bold;">বাতিল</button>
-            <button id="modalBtnConfirm" style="background:var(--primary-pink); color:white; padding:10px 20px; border:none; border-radius:8px; cursor:pointer; font-family: 'Kalpurush'; font-weight: bold;">ঠিক আছে</button>
-        </div>
-    </div>
-</div>
-
-<!-- Audio for Live Notification Alert -->
-<audio id="liveNotifSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
-
-<!-- 1. USER INTERFACE -->
-<div class="main-container" id="userPanel">
-    <div class="logo-title-wrapper">
-        <h1 class="logo-title">
-            <span class="title-icon">✍️</span>গল্পপাঠান
-        </h1>
-    </div>
-    <p class="subtitle">পার্মানেন্ট স্টোরি পাবলিকেশন ও রিভিউ পোর্টাল</p>
-
-    <!-- User Toggle Tabs -->
-    <div class="user-tabs">
-        <div class="u-tab active" onclick="switchUserTab('upload')">গল্প জমা দিন</div>
-        <div class="u-tab" onclick="switchUserTab('feedback')">আমার গল্প ও স্ট্যাটাস</div>
-        <div class="u-tab" onclick="switchUserTab('notifications')">
-            নোটিফিকেশন <span id="notifCountBadge" class="notif-badge-icon">0</span>
-        </div>
-    </div>
-
-    <!-- Submit Section -->
-    <div id="uploadSection">
-        <div class="info-card">
-            <b>নিয়মাবলী:</b><br>
-            ১. আপনার লেখা মৌলিক গল্প জমা দিন। গল্পগুলো পার্মানেন্টলি সেভ থাকবে।<br>
-            ২. গল্পের শব্দসংখ্যা ন্যূনতম ৫০০০ হতে হবে। AI (কৃত্রিম বুদ্ধিমত্তা) দ্বারা লিখিত গল্প সম্পূর্ণ বাতিল (Reject) বলে গণ্য হবে।<br>
-            ৩. আপনার গল্প গৃহীত হলো নাকি বাতিল, তা 'আমার গল্প ও স্ট্যাটাস' ট্যাবে দেখতে পাবেন।<br>
-            ৪. গল্প জমা দেওয়ার মাধ্যমে আপনি সজ্ঞানে গল্পের সম্প্রচার ও প্রকাশনার স্বত্ব (Copyright) আমাদের চ্যানেলকে প্রদান করছেন। ভবিষ্যতে এই গল্পের উপর কোনো প্রকার স্বত্ব বা আইনি দাবি গ্রহণযোগ্য হবে না।
-        </div>
-
-        <form id="storyForm">
-            <label class="input-label">লেখকের নাম:<span class="required-star">*</span></label>
-            <input type="text" id="authorName" placeholder="আপনার সম্পূর্ণ নাম লিখুন" required>
-
-            <label class="input-label">গল্পের শিরোনাম:<span class="required-star">*</span></label>
-            <input type="text" id="storyTitle" placeholder="গল্পের নাম" required>
-
-            <label class="input-label">গল্পের ধরন (ক্যাটাগরি):<span class="required-star">*</span></label>
-            <select id="storyCategory" onchange="updateAssignedMentorInfo()" required>
-                <option value="" disabled selected>ক্যাটাগরি সিলেক্ট করুন</option>
-                
-                <optgroup label="প্রেম কুটির (রোমান্টিক ও সামাজিক)">
-                    <option value="রোমান্টিক">রোমান্টিক (Romantic)</option>
-                    <option value="সামাজিক">সামাজিক (Social)</option>
-                    <option value="বিরহ/ট্র্যাজেডি">বিরহ/ট্র্যাজেডি (Tragedy/Heartbreak)</option>
-                    <option value="ক্লাসিক">ক্লাসিক (Classic)</option>
-                    <option value="কমেডি/হাস্যরসাত্মক">কমেডি/হাস্যরসাত্মক (Comedy)</option>
-                    <option value="পারিবারিক">পারিবারিক (Family Drama)</option>
-                </optgroup>
-                
-                <optgroup label="পাঁচকাহন (থ্রিলার ও মিস্ট্রি)">
-                    <option value="ভূতের গল্প / হরর">ভূতের গল্প / হরর (Horror)</option>
-                    <option value="গোয়েন্দা">গোয়েন্দা (Detective)</option>
-                    <option value="থ্রিলার ও সাসপেন্স">থ্রিলার ও সাসপেন্স (Thriller)</option>
-                    <option value="অ্যাডভেঞ্চার">অ্যাডভেঞ্চার (Adventure)</option>
-                    <option value="সায়েন্স ফিকশন">সায়েন্স ফিকশন (Sci-Fi)</option>
-                    <option value="১৮+ / ডার্ক">১৮+ / ডার্ক (18+ / Dark)</option>
-                    <option value="অ্যাকশন">অ্যাকশন (Action)</option>
-                </optgroup>
-
-                <option value="অন্যান্য">অন্যান্য (নিজে লিখুন)</option>
-            </select>
-
-            <input type="text" id="otherCategoryInput" placeholder="গল্পের ক্যাটাগরি লিখুন *" style="display:none;">
-
-            <div id="assignedMentorInfo" class="mentor-assigned-info" style="display:none;"></div>
-
-            <label class="input-label">গল্প পাঠানোর মাধ্যম:<span class="required-star">*</span></label>
-            <select id="submissionType" onchange="toggleSubmissionMethod()" required>
-                <option value="text">লিখে জমা দিন (টাইপ বা কপি-পেস্ট)</option>
-                <option value="doc">ডক ফাইল আপলোড করুন (.doc, .docx)</option>
-                <option value="pdf" id="pdfOption" style="display:none;">পিডিএফ আপলোড করুন (.pdf)</option>
-            </select>
-
-            <label class="input-label" id="dynamicInputLabel">গল্পের বিবরণ / ফাইল আপলোড:<span class="required-star">*</span></label>
-            <div id="textInputArea">
-                <textarea id="storyText" placeholder="এখানে আপনার সম্পূর্ণ গল্পটি লিখুন..."></textarea>
+    <!-- 1. LOGIN / SETUP OVERLAY -->
+    <div id="setupOverlay">
+        <div class="setup-card">
+            <h1>Meetu App</h1>
+            <p>Free Premium Video Calling</p>
+            
+            <!-- User Avatar Setup -->
+            <label class="profile-setup" title="Change profile picture">
+                <img id="setupAvatarPreview" src="" />
+                <div class="edit-overlay">Change Pic</div>
+                <input type="file" id="pfpInput" accept="image/*" style="display:none" onchange="handlePfpUpload(event)">
+            </label>
+            
+            <input type="text" id="userNameInput" class="meet-input" placeholder="Enter your name">
+            
+            <!-- Install App Button for PWA -->
+            <button id="installAppBtn" onclick="installPWA()">
+                <span class="material-symbols-outlined" style="vertical-align: middle; margin-right: 5px;">get_app</span> 
+                Install Meetu App
+            </button>
+            
+            <!-- Host Panel (Create Meeting) -->
+            <div id="hostActions" style="display:none;">
+                <button class="btn-main btn-primary" onclick="initiateSetup('host')">
+                    <span class="material-symbols-outlined">video_call</span> New Meeting
+                </button>
+                <p style="color: var(--text-muted); font-size: 13px; margin: 15px 0;">Othoba link diye join korun:</p>
+                <input type="text" id="joinLinkInput" class="meet-input" placeholder="Meeting link ekhane paste korun" style="margin-bottom: 10px;">
+                <button class="btn-main btn-success" onclick="joinByLink()">
+                    <span class="material-symbols-outlined">link</span> Join a Meet
+                </button>
+            </div>
+            
+            <!-- Guest Panel (Join via Link) -->
+            <div id="guestActions" style="display:none;">
+                <button class="btn-main btn-success" onclick="initiateSetup('guest')">
+                    <span class="material-symbols-outlined">login</span> Ask to Join
+                </button>
             </div>
 
-            <div id="fileInputArea" style="display:none;">
-                <input type="file" id="storyFile" accept=".doc,.docx,.pdf">
-                <p style="font-size: 12px; color: var(--text-muted); margin-top: -5px; margin-bottom: 15px;">সঠিক ফরম্যাটের ফাইল সিলেক্ট করুন।</p>
-            </div>
-
-            <button type="submit" class="btn-action" id="btnSubmit"><i class="fas fa-paper-plane"></i> গল্প পাঠান</button>
-        </form>
-        <div id="upload-status"></div>
+            <!-- Settings Button -->
+            <button onclick="openSettings()" style="margin-top: 20px; background: transparent; color: var(--primary); display: flex; align-items: center; justify-content: center; width: 100%; gap: 5px;">
+                <span class="material-symbols-outlined" style="font-size:18px;">settings</span> Settings
+            </button>
+        </div>
     </div>
 
-    <!-- User Feedback Section -->
-    <div id="feedbackSection" style="display:none;">
-        <h3 style="color:var(--primary-pink); margin-bottom: 15px; text-align: center;">আপনার পাঠানো গল্পের বর্তমান অবস্থা</h3>
-        <div id="myStoryList"></div>
+    <!-- 2. MAIN WORKSPACE (Video Grid Container) -->
+    <div id="mainWorkspace">
+        <div id="videoGrid"></div>
     </div>
 
-    <!-- User Notification Section -->
-    <div id="notificationsSection" style="display:none;">
-        <h3 style="color:var(--primary-pink); margin-bottom: 15px; text-align: center;"><i class="fas fa-bell"></i> লাইভ নোটিফিকেশন হিস্ট্রি</h3>
+    <!-- 3. BOTTOM CONTROLS BAR -->
+    <div id="controlsBar">
         
-        <div class="notif-controls">
-            <div>
-                <label style="font-size: 13px; font-weight:bold; color:var(--text-muted);">অটোমেটিক মুছে ফেলুন:</label>
-                <select id="autoDeleteSetting" onchange="saveAutoDeleteSetting()" style="width: auto; padding: 5px; font-size: 13px; margin: 0; border: 1px solid #ccc; display:inline-block; border-radius:5px;">
-                    <option value="never">কখনো না (আজীবন)</option>
-                    <option value="1">১ দিন পর</option>
-                    <option value="7">৭ দিন পর</option>
-                    <option value="30">৩০ দিন পর</option>
+        <!-- Reactions Pop-up Menu -->
+        <div id="reactionMenu">
+            <button class="react-btn" onclick="sendReaction('👍')">👍</button>
+            <button class="react-btn" onclick="sendReaction('❤️')">❤️</button>
+            <button class="react-btn" onclick="sendReaction('😂')">😂</button>
+            <button class="react-btn" onclick="sendReaction('👏')">👏</button>
+            <button class="react-btn" onclick="sendReaction('🎉')">🎉</button>
+        </div>
+
+        <!-- Mic Control Pill (Toggle + Selector) -->
+        <div class="meet-pill off" id="micPill">
+            <button class="meet-pill-main" onclick="toggleMic()" title="Toggle Microphone">
+                <span class="material-symbols-outlined" id="micIcon">mic_off</span>
+            </button>
+            <button class="meet-pill-arrow" onclick="openDeviceMenu('audioinput', event)" title="Select Microphone">
+                <span class="material-symbols-outlined" style="font-size:20px;">arrow_drop_up</span>
+            </button>
+        </div>
+
+        <!-- Cam Control Pill (Toggle + Selector) -->
+        <div class="meet-pill off" id="camPill">
+            <button class="meet-pill-main" onclick="toggleCam()" title="Toggle Camera">
+                <span class="material-symbols-outlined" id="camIcon">videocam_off</span>
+            </button>
+            <button class="meet-pill-arrow" onclick="openDeviceMenu('videoinput', event)" title="Select Camera">
+                <span class="material-symbols-outlined" style="font-size:20px;">arrow_drop_up</span>
+            </button>
+        </div>
+
+        <!-- Action Buttons -->
+        <button class="control-btn" id="screenBtn" onclick="toggleScreen()" title="Share Screen">
+            <span class="material-symbols-outlined">present_to_all</span>
+        </button>
+        
+        <button class="control-btn" id="recordBtn" onclick="toggleRecord()" title="Record Session">
+            <span class="material-symbols-outlined">radio_button_checked</span>
+        </button>
+        
+        <button class="control-btn" onclick="toggleReactionMenu()" title="React">
+            <span class="material-symbols-outlined">add_reaction</span>
+        </button>
+        
+        <button class="control-btn" onclick="toggleSidebar('chat')" title="Chat">
+            <span class="material-symbols-outlined">chat</span>
+        </button>
+        
+        <button class="control-btn" onclick="toggleSidebar('info')" title="Meeting Details">
+            <span class="material-symbols-outlined">info</span>
+        </button>
+        
+        <button class="control-btn" onclick="openSettings()" title="Settings">
+            <span class="material-symbols-outlined">settings</span>
+        </button>
+        
+        <!-- End Call Button -->
+        <button class="control-btn end-call-btn" onclick="endCall()" title="Leave call">
+            <span class="material-symbols-outlined">call_end</span>
+        </button>
+    </div>
+
+    <!-- Floating Device Select Menu -->
+    <div id="deviceMenuPopup"></div>
+
+    <!-- Floating Meeting Link Box -->
+    <div id="meetingInfo">
+        <strong style="color:var(--primary)">Meeting Link:</strong><br>
+        <input type="text" id="inviteLink" readonly style="background:transparent; border:none; color:white; width:200px; margin-top:5px;" onclick="this.select()">
+        <button onclick="copyLink()" style="background:var(--surface); color:white; padding:4px 8px; border-radius:4px; font-size:12px; margin-left:5px;">Copy</button>
+    </div>
+
+    <!-- Chat Sidebar -->
+    <div id="chatSidebar" class="sidebar">
+        <div class="sidebar-header">
+            <span>In-call Messages</span>
+            <button class="control-btn" style="width:32px; height:32px; background:transparent; border:none;" onclick="toggleSidebar('chat')">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div class="sidebar-body" id="chatBody"></div>
+        <div class="chat-input-area">
+            <input type="text" id="chatInput" placeholder="Send a message..." onkeypress="if(event.key==='Enter') sendChat()">
+            <button onclick="sendChat()"><span class="material-symbols-outlined">send</span></button>
+        </div>
+    </div>
+
+    <!-- Participants Sidebar -->
+    <div id="infoSidebar" class="sidebar">
+        <div class="sidebar-header">
+            <span>People & Info</span>
+            <button class="control-btn" style="width:32px; height:32px; background:transparent; border:none;" onclick="toggleSidebar('info')">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div class="sidebar-body">
+            <h4 style="margin:0 0 10px 0; color:var(--primary);">Participants</h4>
+            <div id="participantsList" style="display:flex; flex-direction:column; gap:10px;"></div>
+        </div>
+    </div>
+
+    <!-- Admit Request Modal -->
+    <div id="admitModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Someone wants to join</h3>
+            <img id="guestAvatarPreview" style="width:70px; height:70px; border-radius:50%; object-fit:cover; margin:10px auto; border:2px solid var(--primary); display:none;" src=""/>
+            <p><span id="guestNameText" style="font-weight:bold; color:var(--primary);">Someone</span> is requesting to join.</p>
+            <div class="modal-buttons">
+                <button onclick="handleAdmit(true)" class="btn-success">Admit</button>
+                <button onclick="handleAdmit(false)" style="background:transparent; border:1px solid var(--danger); color:var(--danger);">Deny</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 style="margin-top:0;">Settings</h3>
+            <div class="setting-group">
+                <label>Audio Output (Speaker/Headphone)</label>
+                <select id="audioOutputSelect" onchange="changeAudioOutput()">
+                    <option value="">System Default</option>
                 </select>
             </div>
-            <button onclick="clearAllNotifications()" style="background:var(--error-red); color:white; border:none; padding:8px 15px; border-radius:8px; font-family:'Kalpurush'; cursor:pointer; font-weight:bold; font-size:13px;">সব মুছুন</button>
-        </div>
-
-        <div id="notifListContainer">
-            <!-- Notifications load here -->
-        </div>
-    </div>
-
-    <button id="btnMentorLogin" class="btn-outline" style="margin-top:30px;" onclick="openMentorLogin()">
-        <i class="fas fa-lock"></i> অ্যাডমিন/রিভিউয়ার প্যানেল লগইন
-    </button>
-</div>
-
-<!-- 2. MENTOR DASHBOARD -->
-<div class="main-container dashboard-container" id="mentorPanel">
-    <div class="navbar">
-        <span id="nameTag" style="color: var(--primary-pink); font-weight: bold; font-size: 18px;"></span>
-        <button onclick="exitDashboard()" class="logout-btn"><i class="fas fa-sign-out-alt"></i> লগ আউট</button>
-    </div>
-
-    <!-- Admin Tools -->
-    <div class="master-panel" id="adminControls" style="display: none;">
-        <div style="display:flex; align-items:center; gap:10px;">
-            <i class="fas fa-file-pdf" style="font-size: 24px; color: var(--error-red);"></i>
-            <div>
-                <b style="color:var(--text-dark); display:block; font-size: 15px;">PDF আপলোডের অনুমতি দিন</b>
-                <span style="font-size:12px; color:var(--text-muted);" id="pdfStatusLabel">বর্তমানে বন্ধ আছে</span>
+            <div class="setting-group">
+                <label>Custom Background Video URL (MP4)</label>
+                <input type="text" id="bgUrlInput" placeholder="https://example.com/video.mp4" value="https://videos.pexels.com/video-files/3129671/3129671-hd_1920_1080_30fps.mp4">
+            </div>
+            <div class="modal-buttons">
+                <button onclick="saveSettings()" class="btn-primary">Save & Apply</button>
+                <button onclick="document.getElementById('settingsModal').style.display='none'" style="background:var(--surface); border:1px solid var(--border); color:white;">Close</button>
             </div>
         </div>
-        <label class="switch">
-            <input type="checkbox" id="masterPdfSwitch" onchange="updatePdfPermissionGlobal(this.checked)">
-            <span class="slider"></span>
-        </label>
     </div>
 
-    <h3 style="text-align:center; border-bottom: 2px solid var(--light-pink); padding-bottom: 15px; margin-bottom: 20px; color: var(--primary-pink);">📥 জমা পড়া গল্পসমূহ</h3>
-    <div id="inboxList"></div>
-</div>
+    <!-- Notification Toast -->
+    <div id="toast">Message</div>
 
-<!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-
-<script>
-    /* CORE LOGIC - GOLPO PATHAN PORTAL (V17 - Robust Deployment Fixes) */
-
-    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-        apiKey: "AIzaSyCjrGdZMocegvJBIXKI5UKAfzFK7k3-iKI", 
-        projectId: "prothomkotha-2002"
-    };
-    const appId = typeof __app_id !== 'undefined' ? __app_id : "golposolpo-premium";
-    
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-    const auth = firebase.auth();
-
-    const CLOUD_NAME = 'dy9bujsit'; 
-    const UPLOAD_PRESET = 'Prothom Kotha Voice';
-    
-    const getRef = (col) => db.collection('artifacts').doc(appId).collection('public').doc('data').collection(col);
-
-    let activeMentor = "";
-    let isMaster = false;
-    let isPdfAllowedGlobal = false;
-    let isUserListenerRunning = false;
-    
-    let audioRecorder;
-    let audioChunks = [];
-
-    // --- SAFE LOCAL STORAGE IMPLEMENTATION ---
-    const safeStorage = {
-        get: (key) => { try { return localStorage.getItem(key); } catch(e) { return null; } },
-        set: (key, val) => { try { localStorage.setItem(key, val); } catch(e) {} }
-    };
-    // Local Storage tracking - This isolates data to specific device ONLY
-    let myStoryIds = JSON.parse(safeStorage.get('my_golpo_ids')) || [];
-    let myKnownStoryStates = JSON.parse(safeStorage.get('my_known_story_states')) || {};
-    let myNotifications = JSON.parse(safeStorage.get('my_notifications')) || [];
-    let unreadNotifCount = parseInt(safeStorage.get('unread_notif_count')) || 0;
-    let notifAutoDeleteDays = safeStorage.get('notif_auto_delete_days') || 'never';
-
-    function saveLocalData() {
-        safeStorage.set('my_golpo_ids', JSON.stringify(myStoryIds));
-        safeStorage.set('my_known_story_states', JSON.stringify(myKnownStoryStates));
-        safeStorage.set('my_notifications', JSON.stringify(myNotifications));
-        safeStorage.set('unread_notif_count', unreadNotifCount);
-        safeStorage.set('notif_auto_delete_days', notifAutoDeleteDays);
-    }
-
-    // --- CUSTOM MODAL UI LOGIC ---
-    function showModal(title, message, type = 'alert', callback = null, inputType = 'text') {
-        const modal = document.getElementById('customModal');
-        document.getElementById('modalTitle').innerText = title;
-        document.getElementById('modalMessage').innerText = message;
+    <script>
+        /* =========================================================================
+           PROGRESSIVE WEB APP (PWA) SETUP - NO PLAYSTORE NEEDED
+           ========================================================================= */
         
-        const inputEl = document.getElementById('modalInput');
-        inputEl.style.display = type === 'prompt' ? 'block' : 'none';
-        inputEl.type = inputType;
-        inputEl.value = '';
-        
-        const btnCancel = document.getElementById('modalBtnCancel');
-        btnCancel.style.display = (type === 'prompt' || type === 'confirm') ? 'inline-block' : 'none';
-        
-        const btnConfirm = document.getElementById('modalBtnConfirm');
-        
-        modal.style.display = 'flex';
-        if(type === 'prompt') inputEl.focus();
-
-        btnConfirm.onclick = () => {
-            modal.style.display = 'none';
-            if(callback) {
-                if(type === 'prompt') callback(inputEl.value);
-                else if(type === 'confirm') callback(true);
-                else callback();
-            }
-        };
-
-        btnCancel.onclick = () => {
-            modal.style.display = 'none';
-            if(callback) {
-                if(type === 'prompt') callback(null);
-                else if(type === 'confirm') callback(false);
-            }
-        };
-    }
-
-    // Mapping Channels based on Category
-    const MENTOR_NEHA = "প্রেম কুটির";
-    const MENTOR_TANIMA = "পাঁচকাহন";
-
-    // Channel Logos
-    const LOGO_PREM_KUTIR = "https://i.ibb.co/hJdb514B/Logo.png"; 
-    const LOGO_PANCHKAHON = "https://i.ibb.co/r2KNWgBv/Logo.png";
-
-    const nehaCategories = ['রোমান্টিক', 'সামাজিক', 'বিরহ/ট্র্যাজেডি', 'ক্লাসিক', 'কমেডি/হাস্যরসাত্মক', 'পারিবারিক'];
-    const tanimaCategories = ['ভূতের গল্প / হরর', 'গোয়েন্দা', 'থ্রিলার ও সাসপেন্স', 'অ্যাডভেঞ্চার', 'সায়েন্স ফিকশন', '১৮+ / ডার্ক', 'অ্যাকশন'];
-
-    window.onload = async function() {
-        try {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await auth.signInWithCustomToken(__initial_auth_token);
-            } else {
-                await auth.signInAnonymously();
-            }
-        } catch (err) {
-            console.log("Firebase Auth Error ignored to allow core app running.");
-        }
-
-        // Initialize core functions independently of auth state!
-        document.getElementById('autoDeleteSetting').value = notifAutoDeleteDays;
-        listenSystemSettings();
-        startUserStoryListener(); 
-        updateNotifBadgeUI();
-        processAutoDeleteNotifications();
-        renderNotifications();
-        
-        auth.onAuthStateChanged(user => { /* No strict blocking actions needed here */ });
-    };
-
-    let lastStoryHtml = "<p style='text-align:center; color:var(--text-muted); margin-top:20px;'>আপনি এখনো কোনো গল্প জমা দেননি বা তালিকা থেকে মুছে দিয়েছেন।</p>";
-
-    // --- UI LOGICS ---
-    window.switchUserTab = function(tabName) {
-        document.querySelectorAll('.u-tab').forEach(t => t.classList.remove('active'));
-        document.getElementById('uploadSection').style.display = 'none';
-        document.getElementById('feedbackSection').style.display = 'none';
-        document.getElementById('notificationsSection').style.display = 'none';
-
-        if(tabName === 'upload') {
-            document.querySelector('.u-tab:nth-child(1)').classList.add('active');
-            document.getElementById('uploadSection').style.display = 'block';
-        } else if (tabName === 'feedback') {
-            document.querySelector('.u-tab:nth-child(2)').classList.add('active');
-            document.getElementById('feedbackSection').style.display = 'block';
-            const listDiv = document.getElementById('myStoryList');
-            if (listDiv) listDiv.innerHTML = lastStoryHtml;
-        } else if (tabName === 'notifications') {
-            document.querySelector('.u-tab:nth-child(3)').classList.add('active');
-            document.getElementById('notificationsSection').style.display = 'block';
-            unreadNotifCount = 0;
-            saveLocalData();
-            updateNotifBadgeUI();
-            renderNotifications();
-        }
-    }
-
-    window.updateAssignedMentorInfo = function() {
-        const cat = document.getElementById('storyCategory').value;
-        const infoDiv = document.getElementById('assignedMentorInfo');
-        const otherCatInput = document.getElementById('otherCategoryInput');
-        
-        if(!cat) {
-            infoDiv.style.display = 'none';
-            otherCatInput.style.display = 'none';
-            otherCatInput.required = false;
-            return;
-        }
-
-        if (cat === 'অন্যান্য') {
-            otherCatInput.style.display = 'block';
-            otherCatInput.required = true;
-        } else {
-            otherCatInput.style.display = 'none';
-            otherCatInput.required = false;
-            otherCatInput.value = '';
-        }
-
-        let mentor = "";
-        if (nehaCategories.includes(cat)) mentor = MENTOR_NEHA;
-        else if (tanimaCategories.includes(cat)) mentor = MENTOR_TANIMA;
-        else if (cat === 'অন্যান্য') mentor = "উভয়";
-
-        infoDiv.innerHTML = `👩‍🏫 এই গল্পটি <b>${mentor}</b> চ্যানেলে জমা হবে।`;
-        infoDiv.style.display = 'block';
-    }
-
-    window.toggleSubmissionMethod = function() {
-        const type = document.getElementById('submissionType').value;
-        const textArea = document.getElementById('textInputArea');
-        const fileArea = document.getElementById('fileInputArea');
-        const fileInput = document.getElementById('storyFile');
-
-        if(type === 'text') {
-            textArea.style.display = 'block';
-            fileArea.style.display = 'none';
-        } else {
-            textArea.style.display = 'none';
-            fileArea.style.display = 'block';
-            if(type === 'doc') fileInput.accept = ".doc,.docx";
-            if(type === 'pdf') fileInput.accept = ".pdf";
-        }
-    }
-
-    function listenSystemSettings() {
-        try {
-            getRef('settings').doc('systemControl').onSnapshot(doc => {
-                const data = doc.exists ? doc.data() : null;
-                isPdfAllowedGlobal = data ? data.allowPdf : false;
-                
-                const pdfOpt = document.getElementById('pdfOption');
-                if(pdfOpt) pdfOpt.style.display = isPdfAllowedGlobal ? 'block' : 'none';
-
-                if (isMaster && document.getElementById('masterPdfSwitch')) {
-                    document.getElementById('masterPdfSwitch').checked = isPdfAllowedGlobal;
-                    document.getElementById('pdfStatusLabel').innerText = isPdfAllowedGlobal ? "অনুমতি দেওয়া আছে" : "বন্ধ আছে";
+        // Setup JSON Manifest inline
+        const manifestData = {
+            "name": "Meetu Video Call",
+            "short_name": "Meetu",
+            "start_url": window.location.pathname,
+            "display": "standalone",
+            "background_color": "#000000",
+            "theme_color": "#8ab4f8",
+            "icons": [
+                {
+                    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAyNCAyNCcgZmlsbD0nIzhhYjRmOCcvPjxwYXRoIGQ9J00xNyAxMC41VjdoLTF2LTFjMC0xLjEtLjktMi0yLTJINEMyLjkgNCAyIDQuOSAyIDZ2MTJjMCAxLjEuOSAyIDIgMmgxMGMxLjEgMCAyLS45IDItMnYtMS41bDQgNHYtMTFsLTQgNHpNNCA2aDEwdjdINHYtN3onLz48L3N2Zz4=",
+                    "sizes": "192x192",
+                    "type": "image/svg+xml"
                 }
+            ]
+        };
+
+        const manifestBlob = new Blob([JSON.stringify(manifestData)], {type: 'application/json'});
+        const manifestUrl = URL.createObjectURL(manifestBlob);
+        document.getElementById('manifest-link').setAttribute('href', manifestUrl);
+
+        // Setup Virtual Service Worker for offline/install capabilities
+        const swCode = `
+            self.addEventListener('install', e => self.skipWaiting());
+            self.addEventListener('activate', e => self.clients.claim());
+            self.addEventListener('fetch', e => {});
+        `;
+        const swBlob = new Blob([swCode], {type: 'application/javascript'});
+        const swUrl = URL.createObjectURL(swBlob);
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register(swUrl).then(() => {
+                console.log("PWA Service Worker Registered");
+            }).catch(err => {
+                console.log("PWA SW Failed: ", err);
             });
-        } catch(e) {}
-    }
-
-    // --- STORY SUBMISSION ---
-    document.getElementById('storyForm').onsubmit = async function(e) {
-        e.preventDefault();
-        
-        const btn = document.getElementById('btnSubmit');
-        const statusDiv = document.getElementById('upload-status');
-        
-        let cat = document.getElementById('storyCategory').value;
-        if(!cat) return showModal("সতর্কতা", "দয়া করে গল্পের ক্যাটাগরি সিলেক্ট করুন!");
-
-        let finalCategory = cat;
-        if (cat === 'অন্যান্য') {
-            finalCategory = document.getElementById('otherCategoryInput').value.trim();
-            if (!finalCategory) return showModal("সতর্কতা", "দয়া করে গল্পের ক্যাটাগরি লিখে জানান!");
         }
 
-        const subType = document.getElementById('submissionType').value;
-        let textContent = document.getElementById('storyText').value;
-        const fileObj = document.getElementById('storyFile').files[0];
+        // Handle PWA Install Prompt
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent the mini-infobar from appearing on mobile
+            e.preventDefault();
+            // Stash the event so it can be triggered later.
+            deferredPrompt = e;
+            // Update UI to notify the user they can install the PWA
+            document.getElementById('installAppBtn').style.display = 'block';
+        });
 
-        if (subType === 'text') {
-            if (!textContent.trim()) return showModal("সতর্কতা", "গল্পের অংশ ফাঁকা রাখা যাবে না!");
-            const wordCount = textContent.trim().split(/\s+/).filter(word => word.length > 0).length;
-            if (wordCount < 5000) {
-                return showModal("সতর্কতা", `দুঃখিত! গল্পের শব্দসংখ্যা ন্যূনতম ৫০০০ হতে হবে। আপনার গল্পে মাত্র ${wordCount} শব্দ আছে।`);
+        async function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    showToast("App inistall hochhe...");
+                }
+                deferredPrompt = null;
+                document.getElementById('installAppBtn').style.display = 'none';
             }
         }
+
+
+        /* =========================================================================
+           CORE VARIABLES & INITIALIZATION
+           ========================================================================= */
+        const peer = new Peer({ 
+            config: { 
+                'iceServers': [ 
+                    { urls: 'stun:stun.l.google.com:19302' }, 
+                    { urls: 'stun:stun1.l.google.com:19302' }, 
+                    { urls: 'stun:stun2.l.google.com:19302' } 
+                ] 
+            } 
+        });
         
-        if ((subType === 'doc' || subType === 'pdf') && !fileObj) return showModal("সতর্কতা", "ফাইল সিলেক্ট করুন!");
+        let peers = {}; 
+        let myId = null;
+        let hostId = null;
+        let isHost = false;
+        let isCohost = false;
+        
+        let localStream;
+        let isMicOn = false;
+        let isCamOn = false;
+        let isScreenSharing = false; 
+        
+        let hasRealAudio = false;
+        let hasRealVideo = false;
+        
+        let activeAudioDeviceId = null;
+        let activeVideoDeviceId = null;
+        
+        let mediaRecorder;
+        let recordedChunks = [];
+        
+        let myName = localStorage.getItem('meetu_name') || '';
+        let myPfp = localStorage.getItem('meetu_pfp') || "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238ab4f8'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>";
+        let pendingGuest = null;
 
-        let assignedMentor = "Both";
-        if (nehaCategories.includes(cat)) assignedMentor = MENTOR_NEHA;
-        else if (tanimaCategories.includes(cat)) assignedMentor = MENTOR_TANIMA;
+        // Parse URL to check if user is a guest joining a room
+        const urlParams = new URLSearchParams(window.location.search);
+        hostId = urlParams.get('room');
 
-        btn.disabled = true;
-        statusDiv.innerHTML = "⏳ সার্ভারে জমা হচ্ছে, দয়া করে অপেক্ষা করুন...";
+        // Apply saved user data
+        document.getElementById('userNameInput').value = myName;
+        document.getElementById('setupAvatarPreview').src = myPfp;
+        
+        // Load custom background
+        const defaultBg = localStorage.getItem('meetu_bg') || "https://videos.pexels.com/video-files/3129671/3129671-hd_1920_1080_30fps.mp4";
+        document.getElementById('bgSource').src = defaultBg;
+        document.getElementById('bgUrlInput').value = defaultBg;
+        document.getElementById('bgVideo').load();
 
-        let fileUrl = "";
-        if (subType === 'doc' || subType === 'pdf') {
-            const fd = new FormData();
-            fd.append('file', fileObj);
-            fd.append('upload_preset', UPLOAD_PRESET);
+        /* =========================================================================
+           AUDIO CONTEXT & NOTIFICATION SOUNDS
+           ========================================================================= */
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playTone(type) {
+            // Ensure audio context is running (browsers block it until user interaction)
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            osc.connect(gain); 
+            gain.connect(audioCtx.destination);
+            
+            const now = audioCtx.currentTime;
+
+            if (type === 'join') {
+                // Happy ascending chime
+                osc.type = 'sine'; 
+                osc.frequency.setValueAtTime(440, now); 
+                osc.frequency.setValueAtTime(554.37, now + 0.1); 
+                osc.frequency.setValueAtTime(659.25, now + 0.2);
+                
+                gain.gain.setValueAtTime(0, now); 
+                gain.gain.linearRampToValueAtTime(0.3, now + 0.05); 
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                
+                osc.start(now); 
+                osc.stop(now + 0.5);
+            } 
+            else if (type === 'leave') {
+                // Sad descending chime
+                osc.type = 'sine'; 
+                osc.frequency.setValueAtTime(659.25, now); 
+                osc.frequency.setValueAtTime(523.25, now + 0.15);
+                
+                gain.gain.setValueAtTime(0.3, now); 
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                
+                osc.start(now); 
+                osc.stop(now + 0.4);
+            } 
+            else if (type === 'request') {
+                // Double knock for admission request
+                osc.type = 'triangle'; 
+                osc.frequency.setValueAtTime(600, now); 
+                
+                gain.gain.setValueAtTime(0.3, now); 
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                
+                osc.frequency.setValueAtTime(600, now + 0.15); 
+                gain.gain.setValueAtTime(0.3, now + 0.15); 
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                
+                osc.start(now); 
+                osc.stop(now + 0.3);
+            } 
+            else if (type === 'chat') {
+                // Soft pop sound for messages
+                osc.type = 'sine'; 
+                osc.frequency.setValueAtTime(800, now); 
+                
+                gain.gain.setValueAtTime(0.1, now); 
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                
+                osc.start(now); 
+                osc.stop(now + 0.1);
+            }
+        }
+
+        /* =========================================================================
+           UTILITY FUNCTIONS
+           ========================================================================= */
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg; 
+            t.style.display = 'block';
+            setTimeout(() => {
+                t.style.display = 'none';
+            }, 3000);
+        }
+
+        // Profile Picture Setup
+        function handlePfpUpload(event) {
+            const file = event.target.files[0]; 
+            if(!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas'); 
+                    canvas.width = 150; 
+                    canvas.height = 150 * (img.height/img.width);
+                    
+                    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                    myPfp = canvas.toDataURL('image/jpeg', 0.8);
+                    
+                    localStorage.setItem('meetu_pfp', myPfp);
+                    document.getElementById('setupAvatarPreview').src = myPfp;
+                }
+                img.src = e.target.result;
+            }
+            reader.readAsDataURL(file);
+        }
+
+        // Join via manually pasted link
+        function joinByLink() {
+            const link = document.getElementById('joinLinkInput').value.trim();
+            if(link) {
+                try {
+                    const url = new URL(link);
+                    if(url.searchParams.get('room')) { 
+                        window.location.href = link; 
+                    } else { 
+                        showToast("Sothik meeting link din"); 
+                    }
+                } catch(e) { 
+                    showToast("Link er format sothik noy"); 
+                }
+            }
+        }
+
+        // Copy meeting link to clipboard
+        function copyLink() { 
+            const linkInput = document.getElementById('inviteLink');
+            linkInput.select(); 
+            document.execCommand('copy'); 
+            showToast("Copied to clipboard"); 
+        }
+
+        /* =========================================================================
+           SETTINGS & DEVICE MANAGEMENT
+           ========================================================================= */
+        async function openSettings() { 
+            document.getElementById('settingsModal').style.display = 'flex'; 
             try {
-                const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, { method: 'POST', body: fd });
-                const data = await res.json();
-                if (data.secure_url) fileUrl = data.secure_url;
-                else throw new Error("Cloudinary error");
-            } catch (err) {
-                statusDiv.innerHTML = "❌ ফাইল আপলোড ব্যর্থ হয়েছে!";
-                btn.disabled = false;
+                // Fetch all audio output devices (Speakers/Headphones)
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const audioOutputs = devices.filter(device => device.kind === 'audiooutput');
+                const select = document.getElementById('audioOutputSelect');
+                
+                select.innerHTML = '';
+                
+                if(audioOutputs.length === 0) { 
+                    select.innerHTML = '<option value="">System Default</option>'; 
+                    return; 
+                }
+                
+                audioOutputs.forEach(device => {
+                    const option = document.createElement('option'); 
+                    option.value = device.deviceId; 
+                    option.text = device.label || `Speaker ${select.length + 1}`;
+                    select.appendChild(option);
+                });
+            } catch(e) {
+                console.error("Audio output khuje payni: ", e);
+            }
+        }
+
+        async function changeAudioOutput() {
+            const deviceId = document.getElementById('audioOutputSelect').value; 
+            if(!deviceId) return;
+            
+            const videoElements = document.querySelectorAll('.video-box video');
+            for(const vid of videoElements) {
+                if (typeof vid.sinkId !== 'undefined') {
+                    try { 
+                        await vid.setSinkId(deviceId); 
+                    } catch(e) { 
+                        showToast("Device change support korche na"); 
+                    }
+                }
+            }
+            showToast("Audio output change kora hoyeche");
+        }
+
+        function saveSettings() {
+            const url = document.getElementById('bgUrlInput').value;
+            localStorage.setItem('meetu_bg', url); 
+            
+            document.getElementById('bgSource').src = url; 
+            document.getElementById('bgVideo').load();
+            document.getElementById('settingsModal').style.display = 'none'; 
+            
+            showToast("Settings save hoyeche");
+        }
+
+        // Dropdown Device Menus (Direct on Mic/Cam buttons)
+        async function openDeviceMenu(kind, event) {
+            const menu = document.getElementById('deviceMenuPopup');
+            menu.innerHTML = '';
+            
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const filtered = devices.filter(d => d.kind === kind);
+                
+                if(filtered.length === 0) {
+                    menu.innerHTML = `<button style="color:var(--text-muted)">Kono device pawa jayni</button>`;
+                } else {
+                    filtered.forEach(d => {
+                        const btn = document.createElement('button');
+                        const icon = kind === 'audioinput' ? 'mic' : 'videocam';
+                        
+                        let isSelected = false;
+                        if(kind === 'audioinput' && d.deviceId === activeAudioDeviceId) {
+                            isSelected = true;
+                        } else if(kind === 'videoinput' && d.deviceId === activeVideoDeviceId) {
+                            isSelected = true;
+                        }
+                        
+                        btn.innerHTML = `<span class="material-symbols-outlined" style="font-size:18px">${icon}</span> ${d.label || 'Default Device'}`;
+                        if(isSelected) {
+                            btn.classList.add('device-active');
+                        }
+                        
+                        btn.onclick = () => { 
+                            switchDevice(kind, d.deviceId); 
+                            menu.style.display = 'none'; 
+                        };
+                        menu.appendChild(btn);
+                    });
+                }
+                
+                // Inject Speaker setting link inside audio menu directly
+                if(kind === 'audioinput') {
+                    const outBtn = document.createElement('button');
+                    outBtn.innerHTML = `<span class="material-symbols-outlined" style="font-size:18px">volume_up</span> Speaker/Output Settings...`;
+                    outBtn.style.borderTop = '1px solid var(--border)';
+                    outBtn.style.marginTop = '5px';
+                    outBtn.style.color = 'var(--primary)';
+                    outBtn.onclick = () => { 
+                        menu.style.display = 'none'; 
+                        openSettings(); 
+                    };
+                    menu.appendChild(outBtn);
+                }
+                
+                // Position logic based on mobile/desktop
+                const rect = event.currentTarget.getBoundingClientRect();
+                menu.style.display = 'block';
+                menu.style.left = rect.left + 'px';
+                
+                if(window.innerWidth <= 600) {
+                    menu.style.bottom = '95px'; // Position slightly above the mobile bar
+                } else {
+                    menu.style.bottom = (window.innerHeight - rect.top + 10) + 'px';
+                }
+            } catch(e) { 
+                showToast("Device khujte pareni, Permission din."); 
+            }
+        }
+
+        // Close device menu if clicked outside
+        document.addEventListener('click', (e) => {
+            if(!e.target.closest('.meet-pill-arrow') && !e.target.closest('#deviceMenuPopup')) {
+                document.getElementById('deviceMenuPopup').style.display = 'none';
+            }
+        });
+
+        // Switch active camera or microphone track
+        async function switchDevice(kind, deviceId) {
+            try {
+                let constraints;
+                if(kind === 'audioinput') {
+                    constraints = { audio: { deviceId: { exact: deviceId }, echoCancellation: true, noiseSuppression: true } };
+                } else {
+                    constraints = { video: { deviceId: { exact: deviceId }, facingMode: "user" } }; // Better mobile support
+                }
+                
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                
+                let newTrack;
+                let oldTrack;
+                
+                if(kind === 'audioinput') {
+                    newTrack = stream.getAudioTracks()[0];
+                    oldTrack = localStream.getAudioTracks()[0];
+                } else {
+                    newTrack = stream.getVideoTracks()[0];
+                    oldTrack = localStream.getVideoTracks()[0];
+                }
+                
+                if(oldTrack) {
+                    localStream.removeTrack(oldTrack);
+                }
+                
+                localStream.addTrack(newTrack);
+
+                // Replace track for all existing peer connections
+                Object.values(peers).forEach(p => {
+                    if(p.call) {
+                        const trackKindToFind = kind === 'audioinput' ? 'audio' : 'video';
+                        const sender = p.call.peerConnection.getSenders().find(s => s.track && s.track.kind === trackKindToFind);
+                        if(sender) {
+                            sender.replaceTrack(newTrack);
+                        }
+                    }
+                });
+
+                // Update Local state
+                if(kind === 'audioinput') {
+                    activeAudioDeviceId = deviceId; 
+                    hasRealAudio = true; 
+                    isMicOn = true;
+                } else {
+                    activeVideoDeviceId = deviceId; 
+                    hasRealVideo = true; 
+                    isCamOn = true;
+                    
+                    document.getElementById('video_local').srcObject = localStream;
+                    toggleVideoMuteState('local', true);
+                    broadcast({ type: 'cam_state', state: true });
+                }
+                
+                updateControlsUI();
+                showToast("Device change kora hoyeche");
+                
+            } catch(e) { 
+                showToast("Device change failed!"); 
+            }
+        }
+
+
+        /* =========================================================================
+           PEERJS NETWORK INITIALIZATION
+           ========================================================================= */
+        peer.on('open', id => {
+            myId = id;
+            if(hostId) { 
+                document.getElementById('guestActions').style.display = 'block'; 
+            } else { 
+                isHost = true; 
+                hostId = myId; 
+                document.getElementById('hostActions').style.display = 'block'; 
+            }
+        });
+
+        // Called when user clicks "New Meeting" or "Ask to Join"
+        async function initiateSetup() {
+            const nameInp = document.getElementById('userNameInput').value.trim();
+            if(nameInp) { 
+                myName = nameInp; 
+                localStorage.setItem('meetu_name', myName); 
+            }
+            if(!myName) {
+                myName = isHost ? "Host" : "Guest";
+            }
+
+            try {
+                // Request initial media stream with echo cancellation and user-facing camera
+                localStream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: { echoCancellation: true, noiseSuppression: true },
+                    video: { facingMode: "user" } 
+                });
+                
+                isMicOn = true; 
+                isCamOn = true;
+                hasRealAudio = true; 
+                hasRealVideo = true;
+                
+                activeAudioDeviceId = localStream.getAudioTracks()[0].getSettings().deviceId;
+                activeVideoDeviceId = localStream.getVideoTracks()[0].getSettings().deviceId;
+                
+                updateControlsUI();
+            } catch(e) {
+                console.warn("Media block kora ache, dummy track byabohar kora hochhe.");
+                showToast("Dristi Akarshon: Browser theke Camera/Mic er permission denni!");
+                
+                // Provide fake stream if blocked to prevent app crash
+                localStream = new MediaStream();
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                
+                localStream.addTrack(ctx.createMediaStreamDestination().stream.getAudioTracks()[0]);
+                
+                const canvas = document.createElement('canvas');
+                localStream.addTrack(canvas.captureStream().getVideoTracks()[0]);
+                
+                isMicOn = false; 
+                isCamOn = false;
+            }
+
+            // Hide setup, show workspace
+            document.getElementById('setupOverlay').style.display = 'none';
+            document.getElementById('mainWorkspace').style.display = 'flex';
+            document.getElementById('controlsBar').style.display = 'flex';
+            document.getElementById('meetingInfo').style.display = 'block';
+            
+            // Build local video component
+            createVideoBox('local', myName + " (You)", myPfp, true);
+            document.getElementById('video_local').srcObject = localStream;
+            toggleVideoMuteState('local', isCamOn);
+
+            if(isHost) {
+                const link = window.location.origin + window.location.pathname + "?room=" + myId;
+                document.getElementById('inviteLink').value = link;
+                updateParticipantsList();
+            } else {
+                document.getElementById('inviteLink').value = window.location.href;
+                requestJoin();
+            }
+        }
+
+
+        /* =========================================================================
+           GUEST JOINING & HOST ADMITTING LOGIC
+           ========================================================================= */
+        function requestJoin() {
+            showToast("Join korar request pathano hochhe...");
+            const conn = peer.connect(hostId);
+            
+            conn.on('open', () => { 
+                conn.send({ type: 'request_join', name: myName, pfp: myPfp, id: myId }); 
+            });
+            
+            conn.on('data', data => handleData(conn.peer, data, conn));
+        }
+
+        peer.on('connection', conn => {
+            conn.on('data', data => handleData(conn.peer, data, conn));
+            conn.on('close', () => removePeer(conn.peer));
+        });
+
+        // The Brain of Data Messaging between clients
+        function handleData(peerId, data, conn) {
+            if (data.type === 'request_join') {
+                if(isHost || isCohost) {
+                    pendingGuest = { id: data.id, name: data.name, pfp: data.pfp, conn: conn };
+                    document.getElementById('guestNameText').innerText = data.name;
+                    
+                    if(data.pfp) { 
+                        document.getElementById('guestAvatarPreview').src = data.pfp; 
+                        document.getElementById('guestAvatarPreview').style.display = 'block'; 
+                    }
+                    
+                    playTone('request'); 
+                    document.getElementById('admitModal').style.display = 'flex';
+                }
+            } 
+            else if (data.type === 'cohost_admitted_someone') { 
+                if(isHost) {
+                    completeAdmitProcess(data.guestData); 
+                }
+            }
+            else if (data.type === 'accepted') {
+                playTone('join'); 
+                showToast("Meeting e join korechen");
+                
+                // Connect to host
+                setupPeer(hostId, data.hostName, data.hostPfp, true);
+                
+                // Connect to everyone else in the room
+                data.peersList.forEach(p => { 
+                    if(p.id !== myId) {
+                        setupPeer(p.id, p.name, p.pfp, true); 
+                    }
+                });
+            } 
+            else if (data.type === 'rejected') { 
+                showToast("Request Denied."); 
+                setTimeout(() => window.location.reload(), 2000); 
+            }
+            else if (data.type === 'new_peer_expect') { 
+                peers[data.guest.id] = { name: data.guest.name, pfp: data.guest.pfp, isCohost: false }; 
+            }
+            else if (data.type === 'cam_state') { 
+                toggleVideoMuteState(peerId, data.state); 
+            }
+            else if (data.type === 'chat') { 
+                playTone('chat'); 
+                appendChatMessage(data.sender, data.text, false); 
+                if(document.getElementById('chatSidebar').style.right !== '0px') {
+                    showToast(data.sender + ": " + data.text); 
+                }
+            }
+            else if (data.type === 'reaction') { 
+                showFloatingReaction(data.emoji); 
+            }
+            else if (data.type === 'promoted_to_cohost') { 
+                isCohost = true; 
+                playTone('cohost'); 
+                showToast("Apnake Co-host banano hoyeche!"); 
+            }
+            else if (data.type === 'host_ended_call') { 
+                showToast("Host meeting shesh korechen"); 
+                setTimeout(() => endCall(true), 2000); 
+            }
+        }
+
+        // Host button click for Admit/Deny
+        function handleAdmit(admit) {
+            document.getElementById('admitModal').style.display = 'none'; 
+            if(!pendingGuest) return;
+            
+            if(admit) {
+                if(isHost) {
+                    completeAdmitProcess(pendingGuest);
+                } else if(isCohost) { 
+                    const hostConn = peers[hostId].conn; 
+                    if(hostConn) {
+                        hostConn.send({ type: 'cohost_admitted_someone', guestData: pendingGuest }); 
+                    }
+                }
+            } else { 
+                pendingGuest.conn.send({ type: 'rejected' }); 
+            }
+            pendingGuest = null;
+        }
+
+        // Formal process to add new guest to mesh network
+        function completeAdmitProcess(guest) {
+            const currentPeersList = Object.keys(peers).map(id => {
+                return { id: id, name: peers[id].name, pfp: peers[id].pfp };
+            });
+            
+            guest.conn.send({ type: 'accepted', hostName: myName, hostPfp: myPfp, peersList: currentPeersList });
+            broadcast({ type: 'new_peer_expect', guest: { id: guest.id, name: guest.name, pfp: guest.pfp } });
+            
+            setupPeer(guest.id, guest.name, guest.pfp, false, guest.conn);
+        }
+
+        function setupPeer(id, name, pfp, initiateCall = false, existingConn = null) {
+            if(!peers[id]) {
+                peers[id] = { name: name, pfp: pfp, isCohost: false };
+            }
+            
+            let conn = existingConn; 
+            if(!conn && initiateCall) {
+                conn = peer.connect(id);
+            }
+            
+            if(conn) { 
+                peers[id].conn = conn; 
+                conn.on('data', data => handleData(id, data, conn)); 
+            }
+            
+            if(initiateCall) { 
+                const call = peer.call(id, localStream); 
+                handleCallStream(call, id, name, pfp); 
+            }
+            updateParticipantsList();
+        }
+
+        // Answer incoming calls
+        peer.on('call', call => {
+            const id = call.peer; 
+            const pInfo = peers[id] || { name: "User", pfp: "" };
+            
+            call.answer(localStream); 
+            handleCallStream(call, id, pInfo.name, pInfo.pfp);
+        });
+
+        function handleCallStream(call, id, name, pfp) {
+            peers[id].call = call;
+            call.on('stream', remoteStream => {
+                if(!document.getElementById('box_' + id)) { 
+                    createVideoBox(id, name, pfp, false); 
+                    playTone('join'); 
+                    showToast(name + " joined"); 
+                }
+                const vid = document.getElementById('video_' + id);
+                vid.srcObject = remoteStream; 
+                
+                // Ensure video plays regardless of autoplay policy
+                vid.onloadedmetadata = () => { 
+                    vid.play().catch(e => console.log("Play policy blocked audio", e)); 
+                };
+            });
+            
+            call.on('close', () => removePeer(id));
+        }
+
+        function removePeer(id) {
+            if(document.getElementById('box_' + id)) { 
+                document.getElementById('box_' + id).remove(); 
+                if(peers[id]) {
+                    showToast(peers[id].name + " left"); 
+                }
+                playTone('leave'); 
+            }
+            delete peers[id]; 
+            updateParticipantsList();
+        }
+
+        function broadcast(data) { 
+            Object.values(peers).forEach(p => { 
+                if(p.conn && p.conn.open) {
+                    p.conn.send(data); 
+                }
+            }); 
+        }
+
+
+        /* =========================================================================
+           MEDIA CONTROLS (NANO-SECOND TOGGLES)
+           ========================================================================= */
+           
+        async function toggleMic() {
+            if(!localStream) return;
+            const audioTrack = localStream.getAudioTracks()[0];
+            
+            // Fast toggle if hardware is active
+            if(hasRealAudio && audioTrack) {
+                isMicOn = !isMicOn;
+                audioTrack.enabled = isMicOn; 
+                updateControlsUI();
                 return;
             }
-        }
 
-        const payload = {
-            authorName: document.getElementById('authorName').value,
-            storyTitle: document.getElementById('storyTitle').value,
-            category: finalCategory,
-            submissionType: subType,
-            storyText: textContent,
-            fileUrl: fileUrl,
-            assignedMentor: assignedMentor,
-            readStatus: "Not Yet", decision: "Pending", remarks: "", remarksVoice: "",
-            readStatus_Neha: "Not Yet", decision_Neha: "Pending", remarks_Neha: "", remarksVoice_Neha: "",
-            readStatus_Tanima: "Not Yet", decision_Tanima: "Pending", remarks_Tanima: "", remarksVoice_Tanima: "",
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        };
-
-        try {
-            const docRef = await getRef('stories').add(payload);
-            myStoryIds.unshift(docRef.id);
-            myKnownStoryStates[docRef.id] = payload;
-            saveLocalData();
-
-            statusDiv.innerHTML = "✅ আপনার গল্প সফলভাবে জমা হয়েছে!";
-            this.reset();
-            updateAssignedMentorInfo();
-            toggleSubmissionMethod();
-            setTimeout(() => { statusDiv.innerHTML = ""; btn.disabled = false; }, 3000);
-        } catch (err) { 
-            statusDiv.innerHTML = "❌ ডাটাবেস এরর!"; 
-            btn.disabled = false;
-        }
-    };
-
-    // --- NOTIFICATION LOGIC ---
-    function processLiveNotifications(docId, currentData) {
-        const prevData = myKnownStoryStates[docId];
-        
-        if (!prevData) {
-            myKnownStoryStates[docId] = currentData;
-            saveLocalData();
-            return;
-        }
-        
-        let newNotifs = [];
-
-        if (currentData.assignedMentor !== "Both") {
-            if (prevData.readStatus && currentData.readStatus !== prevData.readStatus) {
-                newNotifs.push(`আপনার গল্প "${currentData.storyTitle}" এর স্ট্যাটাস পরিবর্তন হয়ে '${currentData.readStatus}' হয়েছে।`);
-            }
-            if (prevData.decision && currentData.decision !== prevData.decision) {
-                newNotifs.push(`আপনার গল্প "${currentData.storyTitle}" এর চূড়ান্ত সিদ্ধান্ত: ${currentData.decision}`);
-            }
-            if (currentData.remarks && currentData.remarks !== prevData.remarks) {
-                newNotifs.push(`আপনার গল্প "${currentData.storyTitle}" এ নতুন টেক্সট মতামত দেওয়া হয়েছে।`);
-            }
-            if (currentData.remarksVoice && currentData.remarksVoice !== prevData.remarksVoice) {
-                newNotifs.push(`আপনার গল্প "${currentData.storyTitle}" এ নতুন ভয়েস মতামত দেওয়া হয়েছে।`);
-            }
-        } else {
-            if (prevData.readStatus_Neha && currentData.readStatus_Neha !== prevData.readStatus_Neha) newNotifs.push(`প্রেম কুটির: গল্প "${currentData.storyTitle}" এর স্ট্যাটাস '${currentData.readStatus_Neha}'।`);
-            if (prevData.decision_Neha && currentData.decision_Neha !== prevData.decision_Neha) newNotifs.push(`প্রেম কুটির: গল্প "${currentData.storyTitle}" এর সিদ্ধান্ত '${currentData.decision_Neha}'।`);
-            if (currentData.remarks_Neha && currentData.remarks_Neha !== prevData.remarks_Neha) newNotifs.push(`প্রেম কুটির: গল্প "${currentData.storyTitle}" এ টেক্সট মতামত দেওয়া হয়েছে।`);
-            if (currentData.remarksVoice_Neha && currentData.remarksVoice_Neha !== prevData.remarksVoice_Neha) newNotifs.push(`প্রেম কুটির: গল্প "${currentData.storyTitle}" এ ভয়েস মতামত দেওয়া হয়েছে।`);
-            
-            if (prevData.readStatus_Tanima && currentData.readStatus_Tanima !== prevData.readStatus_Tanima) newNotifs.push(`পাঁচকাহন: গল্প "${currentData.storyTitle}" এর স্ট্যাটাস '${currentData.readStatus_Tanima}'।`);
-            if (prevData.decision_Tanima && currentData.decision_Tanima !== prevData.decision_Tanima) newNotifs.push(`পাঁচকাহন: গল্প "${currentData.storyTitle}" এর সিদ্ধান্ত '${currentData.decision_Tanima}'।`);
-            if (currentData.remarks_Tanima && currentData.remarks_Tanima !== prevData.remarks_Tanima) newNotifs.push(`পাঁচকাহন: গল্প "${currentData.storyTitle}" এ টেক্সট মতামত দেওয়া হয়েছে।`);
-            if (currentData.remarksVoice_Tanima && currentData.remarksVoice_Tanima !== prevData.remarksVoice_Tanima) newNotifs.push(`পাঁচকাহন: গল্প "${currentData.storyTitle}" এ ভয়েস মতামত দেওয়া হয়েছে।`);
-        }
-
-        if (newNotifs.length > 0) {
-            document.getElementById('liveNotifSound').play().catch(()=>{});
-            
-            newNotifs.forEach(msg => {
-                myNotifications.unshift({
-                    id: Date.now().toString() + Math.random(),
-                    message: msg,
-                    time: Date.now()
-                });
-                unreadNotifCount++;
-            });
-            
-            myKnownStoryStates[docId] = currentData;
-            saveLocalData();
-            
-            updateNotifBadgeUI();
-            if(document.getElementById('notificationsSection').style.display === 'block') renderNotifications();
-            
-            if (Notification.permission === "granted") {
-                new Notification("গল্পপাঠান আপডেট!", { body: newNotifs[0] });
-            } else if (Notification.permission !== "denied") {
-                Notification.requestPermission();
-            }
-        } else {
-            myKnownStoryStates[docId] = currentData;
-            saveLocalData();
-        }
-    }
-
-    function updateNotifBadgeUI() {
-        const badge = document.getElementById('notifCountBadge');
-        if (unreadNotifCount > 0) {
-            badge.style.display = 'inline-block';
-            badge.innerText = unreadNotifCount;
-        } else {
-            badge.style.display = 'none';
-        }
-    }
-
-    window.saveAutoDeleteSetting = function() {
-        notifAutoDeleteDays = document.getElementById('autoDeleteSetting').value;
-        saveLocalData();
-        processAutoDeleteNotifications();
-        renderNotifications();
-    }
-
-    function processAutoDeleteNotifications() {
-        if (notifAutoDeleteDays === 'never') return;
-        const days = parseInt(notifAutoDeleteDays);
-        const threshold = Date.now() - (days * 24 * 60 * 60 * 1000);
-        const origLen = myNotifications.length;
-        myNotifications = myNotifications.filter(n => n.time > threshold);
-        if (myNotifications.length !== origLen) saveLocalData();
-    }
-
-    window.clearAllNotifications = function() {
-        showModal("নিশ্চিতকরণ", "সব নোটিফিকেশন মুছতে চান?", "confirm", (res) => {
-            if(res) {
-                myNotifications = [];
-                saveLocalData();
-                renderNotifications();
-            }
-        });
-    }
-
-    window.deleteIndividualNotification = function(id) {
-        myNotifications = myNotifications.filter(n => n.id !== id);
-        saveLocalData();
-        renderNotifications();
-    }
-
-    function renderNotifications() {
-        const listDiv = document.getElementById('notifListContainer');
-        if (myNotifications.length === 0) {
-            listDiv.innerHTML = "<p style='text-align:center; color:#888; margin-top:20px;'>কোনো নোটিফিকেশন নেই।</p>";
-            return;
-        }
-
-        let html = "";
-        myNotifications.forEach(n => {
-            html += `
-                <div class="notif-card">
-                    <button class="notif-del-btn" onclick="deleteIndividualNotification('${n.id}')"><i class="fas fa-times"></i></button>
-                    <span class="notif-time">${new Date(n.time).toLocaleString('bn-BD')}</span>
-                    <p class="notif-msg">${n.message}</p>
-                </div>
-            `;
-        });
-        listDiv.innerHTML = html;
-    }
-
-    window.hideMyStory = function(id) {
-        showModal("নিশ্চিতকরণ", "এটি আপনার লিস্ট থেকে লুকিয়ে ফেলা হবে। আপনি কি নিশ্চিত?", "confirm", (res) => {
-            if(res) {
-                myStoryIds = myStoryIds.filter(sid => sid !== id);
-                saveLocalData();
-                const card = document.getElementById(`storyCard_${id}`);
-                if(card) card.style.display = 'none';
-            }
-        });
-    }
-
-    // --- SINGLE USER LISTENER ---
-    function startUserStoryListener() {
-        if(isUserListenerRunning) return; 
-        isUserListenerRunning = true;
-
-        try {
-            getRef('stories').onSnapshot(snap => {
-                let html = "";
-                let count = 0;
-
-                snap.forEach(doc => {
-                    if (myStoryIds.includes(doc.id)) {
-                        count++;
-                        const data = doc.data();
-                        
-                        processLiveNotifications(doc.id, data);
-
-                        const getStatClass = (st) => st === "On Process" ? "status-process" : (st === "Complete" ? "status-complete" : "status-not-yet");
-                        const getStatText = (st) => st === "On Process" ? "পড়া চলছে..." : (st === "Complete" ? "পড়া শেষ" : "এখনো পড়া হয়নি");
-                        const getDecClass = (dc) => dc === "Granted" ? "decision-granted" : (dc === "Rejected" ? "decision-rejected" : "decision-pending");
-                        const getDecText = (dc) => dc === "Granted" ? "গৃহীত (Granted)" : (dc === "Rejected" ? "বাতিল (Rejected)" : "অপেক্ষমাণ");
-
-                        let storyDisplay = "";
-                        if(data.submissionType === 'text') {
-                            storyDisplay = `
-                                <button onclick="document.getElementById('st_${doc.id}').style.display='block'" class="btn-outline" style="margin-top:10px; padding:8px;">আপনার গল্পটি দেখুন</button>
-                                <div id="st_${doc.id}" class="story-content-box" style="display:none;">${data.storyText}</div>
-                            `;
-                        } else {
-                            storyDisplay = `<a href="${data.fileUrl}" target="_blank" class="btn-outline" style="display:inline-block; margin-top:10px; padding:8px; text-decoration:none; text-align:center;">ফাইল ডাউনলোড করুন</a>`;
+            // Request permission fallback
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+                const newTrack = stream.getAudioTracks()[0];
+                
+                if(audioTrack) {
+                    localStream.removeTrack(audioTrack);
+                }
+                
+                localStream.addTrack(newTrack);
+                
+                Object.values(peers).forEach(p => {
+                    if(p.call) {
+                        const sender = p.call.peerConnection.getSenders().find(s => s.track && s.track.kind === 'audio');
+                        if(sender) {
+                            sender.replaceTrack(newTrack);
                         }
+                    }
+                });
+                
+                hasRealAudio = true; 
+                isMicOn = true; 
+                updateControlsUI();
+            } catch(e) { 
+                showToast("Mic permission denied"); 
+            }
+        }
 
-                        let statusAndDecisionHtml = "";
-                        
-                        if (data.assignedMentor === "Both") {
-                            let stN = data.readStatus_Neha || "Not Yet"; let dcN = data.decision_Neha || "Pending";
-                            let stT = data.readStatus_Tanima || "Not Yet"; let dcT = data.decision_Tanima || "Pending";
-                            
-                            statusAndDecisionHtml = `
-                                <div style="margin-bottom: 10px; padding: 10px; background: #fffafb; border-radius: 8px; border: 1px dashed var(--light-pink);">
-                                    <p style="font-size:13px; font-weight:bold; color:var(--primary-pink); margin-bottom:5px; display:flex; align-items:center; gap:6px;">
-                                        <img src="${LOGO_PREM_KUTIR}" style="width:18px; height:18px; border-radius:50%; object-fit:cover;"> প্রেম কুটির:
-                                    </p>
-                                    <span class="status-badge ${getStatClass(stN)}">${getStatText(stN)}</span>
-                                    <span class="decision-badge ${getDecClass(dcN)}">${getDecText(dcN)}</span>
-                                    ${data.remarks_Neha ? `<p style="font-size:13px; margin-top:5px; color:var(--text-dark);"><b>মতামত:</b> ${data.remarks_Neha}</p>` : ''}
-                                    ${data.remarksVoice_Neha ? `<audio controls src="${data.remarksVoice_Neha}" class="audio-player-ui"></audio>` : ''}
-                                </div>
-                                <div style="margin-bottom: 10px; padding: 10px; background: #fdfbf7; border-radius: 8px; border: 1px dashed #ffe0b2;">
-                                    <p style="font-size:13px; font-weight:bold; color:var(--gold-text); margin-bottom:5px; display:flex; align-items:center; gap:6px;">
-                                        <img src="${LOGO_PANCHKAHON}" style="width:18px; height:18px; border-radius:50%; object-fit:cover;"> পাঁচকাহন:
-                                    </p>
-                                    <span class="status-badge ${getStatClass(stT)}">${getStatText(stT)}</span>
-                                    <span class="decision-badge ${getDecClass(dcT)}">${getDecText(dcT)}</span>
-                                    ${data.remarks_Tanima ? `<p style="font-size:13px; margin-top:5px; color:var(--text-dark);"><b>মতামত:</b> ${data.remarks_Tanima}</p>` : ''}
-                                    ${data.remarksVoice_Tanima ? `<audio controls src="${data.remarksVoice_Tanima}" class="audio-player-ui"></audio>` : ''}
-                                </div>
-                            `;
-                        } else {
-                            let channelName = data.assignedMentor;
-                            let logoSrc = data.assignedMentor === MENTOR_NEHA ? LOGO_PREM_KUTIR : LOGO_PANCHKAHON;
-                            statusAndDecisionHtml = `
-                                <div style="margin-bottom: 10px;">
-                                    <p style="font-size:13px; font-weight:bold; color:var(--text-muted); margin-bottom:5px; display:flex; align-items:center; gap:6px;">
-                                        <img src="${logoSrc}" style="width:18px; height:18px; border-radius:50%; object-fit:cover;"> চ্যানেল: ${channelName}
-                                    </p>
-                                    <span class="status-badge ${getStatClass(data.readStatus || "Not Yet")}">${getStatText(data.readStatus || "Not Yet")}</span>
-                                    <span class="decision-badge ${getDecClass(data.decision || "Pending")}">${getDecText(data.decision || "Pending")}</span>
-                                </div>
-                            `;
-                            if(data.remarks || data.remarksVoice) {
-                                statusAndDecisionHtml += `<div class="remarks-box"><b style="color:var(--primary-pink); font-size:13px;">চ্যানেলের মতামত:</b>`;
-                                if(data.remarks) statusAndDecisionHtml += `<p style="font-size:15px; margin-top:5px; color:var(--text-dark);">${data.remarks}</p>`;
-                                if(data.remarksVoice) statusAndDecisionHtml += `<audio controls src="${data.remarksVoice}" class="audio-player-ui"></audio>`;
-                                statusAndDecisionHtml += `</div>`;
+        async function toggleCam() {
+            if(!localStream) return;
+            const videoTrack = localStream.getVideoTracks()[0];
+            
+            // Fast toggle (black frame insertion basically)
+            if(hasRealVideo && videoTrack) {
+                isCamOn = !isCamOn;
+                videoTrack.enabled = isCamOn; 
+                
+                toggleVideoMuteState('local', isCamOn);
+                broadcast({ type: 'cam_state', state: isCamOn });
+                
+                updateControlsUI();
+                return;
+            }
+
+            // Request permission fallback
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+                const newTrack = stream.getVideoTracks()[0];
+                
+                if(videoTrack) {
+                    localStream.removeTrack(videoTrack);
+                }
+                
+                localStream.addTrack(newTrack);
+                document.getElementById('video_local').srcObject = localStream;
+                
+                Object.values(peers).forEach(p => {
+                    if(p.call) {
+                        const sender = p.call.peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
+                        if(sender) {
+                            sender.replaceTrack(newTrack);
+                        }
+                    }
+                });
+                
+                hasRealVideo = true; 
+                isCamOn = true;
+                
+                toggleVideoMuteState('local', true);
+                broadcast({ type: 'cam_state', state: true });
+                updateControlsUI();
+            } catch(e) { 
+                showToast("Cam permission denied"); 
+            }
+        }
+
+        async function toggleScreen() {
+            if (!isScreenSharing) {
+                try {
+                    // Try getting display media, highly restricted on mobile phones
+                    const screenStream = await navigator.mediaDevices.getDisplayMedia({ 
+                        video: { displaySurface: "browser" }, 
+                        preferCurrentTab: true, 
+                        audio: true 
+                    });
+                    
+                    const screenTrack = screenStream.getVideoTracks()[0];
+                    
+                    Object.values(peers).forEach(p => {
+                        if(p.call) {
+                            const sender = p.call.peerConnection.getSenders().find(s => s.track.kind === 'video');
+                            if(sender) {
+                                sender.replaceTrack(screenTrack);
                             }
                         }
-
-                        html += `
-                            <div class="user-feedback-card" id="storyCard_${doc.id}">
-                                <p style="font-weight:bold; font-size:20px; color:var(--primary-pink); margin-bottom:5px;">${data.storyTitle}</p>
-                                <p style="font-size:13px; color:var(--text-muted); margin-bottom:15px;">ক্যাটাগরি: ${data.category}</p>
-                                
-                                ${statusAndDecisionHtml}
-                                ${storyDisplay}
-                                
-                                <button class="btn-outline" style="border-color: var(--error-red); color: var(--error-red); margin-top:15px; padding:8px;" onclick="hideMyStory('${doc.id}')">
-                                    <i class="fas fa-eye-slash"></i> আমার লিস্ট থেকে মুছে ফেলুন
-                                </button>
-                            </div>
-                        `;
+                    });
+                    
+                    document.getElementById('video_local').srcObject = new MediaStream([screenTrack]);
+                    document.getElementById('video_local').classList.add('screen-share');
+                    
+                    toggleVideoMuteState('local', true);
+                    broadcast({ type: 'cam_state', state: true });
+                    
+                    isScreenSharing = true;
+                    document.getElementById('screenBtn').classList.add('active');
+                    
+                    screenTrack.onended = () => {
+                        toggleScreen(); 
+                    };
+                } catch(e) { 
+                    showToast("Ei mobile e screen share support kore na. PC try korun."); 
+                }
+            } else {
+                // Revert to camera
+                const camTrack = localStream.getVideoTracks()[0];
+                
+                Object.values(peers).forEach(p => {
+                    if(p.call) {
+                        const sender = p.call.peerConnection.getSenders().find(s => s.track.kind === 'video');
+                        if(sender && camTrack) {
+                            sender.replaceTrack(camTrack);
+                        }
                     }
                 });
                 
-                lastStoryHtml = count === 0 ? "<p style='text-align:center; color:var(--text-muted); margin-top:20px;'>আপনি এখনো কোনো গল্প জমা দেননি বা তালিকা থেকে মুছে দিয়েছেন।</p>" : html;
+                document.getElementById('video_local').srcObject = localStream;
+                document.getElementById('video_local').classList.remove('screen-share');
                 
-                const listDiv = document.getElementById('myStoryList');
-                if (listDiv) listDiv.innerHTML = lastStoryHtml;
-            });
-        } catch (e) {
-            console.log("Error starting listener", e);
-        }
-    }
-
-    // --- MENTOR LOGIN & DASHBOARD ---
-    window.openMentorLogin = function() {
-        showModal("লগইন", "অ্যাডমিন/রিভিউয়ার পাসওয়ার্ড দিন:", "prompt", (pass) => {
-            if (!pass) return;
-            const map = { "Neha123": MENTOR_NEHA, "Tanima123": MENTOR_TANIMA, "Master2002": "All" };
-
-            if (map[pass]) {
-                activeMentor = map[pass];
-                isMaster = (activeMentor === "All");
-
-                document.getElementById('userPanel').style.display = 'none';
-                document.getElementById('mentorPanel').style.display = 'block';
-                document.getElementById('nameTag').innerText = isMaster ? "👤 মাস্টার অ্যাডমিন" : `👤 চ্যানেল: ${activeMentor}`;
+                toggleVideoMuteState('local', isCamOn);
+                broadcast({ type: 'cam_state', state: isCamOn });
                 
-                if (isMaster) {
-                    document.getElementById('adminControls').style.display = 'flex';
-                    listenSystemSettings();
-                }
-                startMentorInboxListener();
-            } else { 
-                showModal("ত্রুটি", "ভুল পাসওয়ার্ড!"); 
+                isScreenSharing = false;
+                document.getElementById('screenBtn').classList.remove('active');
             }
-        }, "password");
-    };
+        }
 
-    async function updatePdfPermissionGlobal(val) {
-        if (!isMaster) return;
-        try {
-            await getRef('settings').doc('systemControl').set({ allowPdf: val }, { merge: true });
-        } catch(e) {}
-    }
-
-    function startMentorInboxListener() {
-        getRef('stories').onSnapshot(snap => {
-            const list = document.getElementById('inboxList');
-            let dataArr = [];
-
-            snap.forEach(doc => {
-                const d = doc.data();
-                const ts = d.timestamp ? d.timestamp.toMillis() : Date.now();
-                if (isMaster || d.assignedMentor === activeMentor || d.assignedMentor === "Both") {
-                    dataArr.push({ id: doc.id, ...d, ts: ts });
-                }
-            });
-
-            dataArr.sort((a, b) => b.ts - a.ts);
-            list.innerHTML = "";
-
-            dataArr.forEach(item => {
-                let storyDisplay = "";
-                if(item.submissionType === 'text') {
-                    storyDisplay = `<div class="story-content-box">${item.storyText}</div>`;
-                } else {
-                    storyDisplay = `<div style="margin: 15px 0;"><a href="${item.fileUrl}" target="_blank" style="color:var(--primary-pink); font-weight:bold; text-decoration:underline;">📥 অ্যাটাচড ফাইলটি ডাউনলোড করে পড়ুন</a></div>`;
-                }
-                
-                let displayMentor = item.assignedMentor === "Both" ? "উভয় চ্যানেল" : item.assignedMentor;
-
-                let currentReadStatus = item.readStatus || 'Not Yet';
-                let currentDecision = item.decision || 'Pending';
-                let currentRemarks = item.remarks || '';
-                let currentVoice = item.remarksVoice || '';
-
-                if (item.assignedMentor === "Both" && !isMaster) {
-                    if (activeMentor === MENTOR_NEHA) {
-                        currentReadStatus = item.readStatus_Neha || 'Not Yet';
-                        currentDecision = item.decision_Neha || 'Pending';
-                        currentRemarks = item.remarks_Neha || '';
-                        currentVoice = item.remarksVoice_Neha || '';
-                    } else if (activeMentor === MENTOR_TANIMA) {
-                        currentReadStatus = item.readStatus_Tanima || 'Not Yet';
-                        currentDecision = item.decision_Tanima || 'Pending';
-                        currentRemarks = item.remarks_Tanima || '';
-                        currentVoice = item.remarksVoice_Tanima || '';
+        async function toggleRecord() {
+            if(!mediaRecorder || mediaRecorder.state === 'inactive') {
+                try {
+                    let streamToRecord;
+                    try {
+                        // Try to record screen + audio first (Standard PC)
+                        const displayStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true, preferCurrentTab: true });
+                        const mixedStream = new MediaStream([displayStream.getVideoTracks()[0]]);
+                        
+                        if(displayStream.getAudioTracks().length > 0) {
+                            mixedStream.addTrack(displayStream.getAudioTracks()[0]);
+                        }
+                        streamToRecord = mixedStream;
+                    } catch(err) {
+                        // Fallback for Mobile: Screen share recording fails, record local camera stream instead
+                        showToast("Screen record fail, camera record shuru hochhe...");
+                        streamToRecord = localStream;
                     }
+                    
+                    mediaRecorder = new MediaRecorder(streamToRecord);
+                    
+                    mediaRecorder.ondataavailable = e => { 
+                        if(e.data.size > 0) {
+                            recordedChunks.push(e.data); 
+                        }
+                    };
+                    
+                    mediaRecorder.onstop = () => {
+                        const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                        const url = URL.createObjectURL(blob);
+                        
+                        const a = document.createElement('a'); 
+                        a.href = url;
+                        a.download = 'Meetu_Record_' + new Date().getTime() + '.webm'; 
+                        a.click();
+                        
+                        recordedChunks = [];
+                        document.getElementById('recordBtn').classList.remove('active');
+                        showToast("Recording save kora hoyeche");
+                    };
+                    
+                    mediaRecorder.start(); 
+                    document.getElementById('recordBtn').classList.add('active'); 
+                    showToast("Recording shuru hoyeche");
+                    
+                } catch(e) { 
+                    showToast("Recording cancel kora hoyeche"); 
                 }
+            } else { 
+                mediaRecorder.stop(); 
+            }
+        }
 
-                list.innerHTML += `
-                    <div class="user-feedback-card">
-                        <span style="float:right; font-size:12px; color:#888;">${new Date(item.ts).toLocaleTimeString('bn-BD')}</span>
-                        <p style="font-size:20px; font-weight:bold; color:var(--primary-pink);">${item.storyTitle}</p>
-                        <p style="font-size:13px; color:var(--text-muted); margin-bottom:10px;">লেখক: <b>${item.authorName}</b> | ক্যাটাগরি: ${item.category} | চ্যানেল: ${displayMentor}</p>
-                        
-                        ${storyDisplay}
-                        
-                        <div class="review-controls">
-                            <div class="control-row">
-                                <label style="font-weight:bold; font-size:14px; color:var(--text-dark);">বর্তমান স্ট্যাটাস:</label>
-                                <select onchange="updateStoryField('${item.id}', 'readStatus', this.value, '${item.assignedMentor}')" style="flex:1; margin-bottom:0; padding:10px; border-radius:8px;">
-                                    <option value="Not Yet" ${currentReadStatus==='Not Yet'?'selected':''}>এখনো পড়া হয়নি (Not Yet)</option>
-                                    <option value="On Process" ${currentReadStatus==='On Process'?'selected':''}>পড়া চলছে (On Process)</option>
-                                    <option value="Complete" ${currentReadStatus==='Complete'?'selected':''}>পড়া শেষ (Complete)</option>
-                                </select>
-                            </div>
-                            
-                            <div class="control-row">
-                                <button class="action-btn btn-grant" onclick="updateStoryField('${item.id}', 'decision', 'Granted', '${item.assignedMentor}')">
-                                    <i class="fas fa-check-circle"></i> গৃহীত (Grant) ${currentDecision === 'Granted' ? '✅' : ''}
-                                </button>
-                                <button class="action-btn btn-reject" onclick="updateStoryField('${item.id}', 'decision', 'Rejected', '${item.assignedMentor}')">
-                                    <i class="fas fa-times-circle"></i> বাতিল (Reject) ${currentDecision === 'Rejected' ? '✅' : ''}
-                                </button>
-                            </div>
+        // Color updates for control buttons
+        function updateControlsUI() {
+            const micPill = document.getElementById('micPill');
+            const micIcon = document.getElementById('micIcon');
+            
+            if(isMicOn) { 
+                micPill.classList.remove('off'); 
+                micPill.classList.add('active'); 
+                micIcon.innerText = 'mic'; 
+            } else { 
+                micPill.classList.add('off'); 
+                micPill.classList.remove('active'); 
+                micIcon.innerText = 'mic_off'; 
+            }
+            
+            const camPill = document.getElementById('camPill');
+            const camIcon = document.getElementById('camIcon');
+            
+            if(isCamOn) { 
+                camPill.classList.remove('off'); 
+                camPill.classList.add('active'); 
+                camIcon.innerText = 'videocam'; 
+            } else { 
+                camPill.classList.add('off'); 
+                camPill.classList.remove('active'); 
+                camIcon.innerText = 'videocam_off'; 
+            }
+        }
 
-                            <div style="background: rgba(233, 30, 99, 0.05); padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px solid var(--light-pink);">
-                                <p style="font-weight:bold; color:var(--primary-pink); margin-bottom:10px; font-size:15px;">
-                                    <i class="fas fa-comment-dots"></i> মেন্টরের মতামত (টেক্সট এবং ভয়েস)
-                                </p>
-                                
-                                <textarea id="rem_${item.id}" placeholder="এখানে টেক্সট মতামত লিখুন..." style="min-height:70px; margin-bottom:10px;">${currentRemarks}</textarea>
-                                
-                                <div id="voiceSection_${item.id}" style="margin-bottom: 15px;">
-                                    ${currentVoice ? `
-                                        <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
-                                            <audio controls src="${currentVoice}" style="flex:1; height:40px; outline:none;"></audio>
-                                            <button onclick="clearVoiceRemarks('${item.id}', '${item.assignedMentor}')" style="background:transparent; border:none; color:var(--error-red); cursor:pointer; font-size:18px;" title="ভয়েস মুছুন"><i class="fas fa-trash"></i></button>
-                                        </div>
-                                    ` : ''}
-                                    
-                                    <div style="display: flex; gap: 10px;">
-                                        <button id="vBtn_${item.id}" class="voice-record-btn" onclick="toggleVoiceRecord('${item.id}', '${item.assignedMentor}')">
-                                            <i class="fas fa-microphone"></i> ${currentVoice ? 'নতুন করে ভয়েস রেকর্ড করুন' : 'ভয়েস রিমার্কস রেকর্ড করুন'}
-                                        </button>
-                                    </div>
-                                    <div id="vLog_${item.id}" style="text-align:center; font-size:13px; font-weight:bold; color:var(--text-dark); margin-top:5px;"></div>
-                                </div>
 
-                                <div class="control-row" style="margin-top:0;">
-                                    <button class="action-btn btn-save" onclick="saveTextRemarks('${item.id}', '${item.assignedMentor}')">
-                                        <i class="fas fa-save"></i> রিমার্কস সেভ করুন
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+        /* =========================================================================
+           UI RENDERING FOR VIDEO GRID
+           ========================================================================= */
+        function createVideoBox(id, name, pfp, isLocal) {
+            const grid = document.getElementById('videoGrid');
+            
+            const box = document.createElement('div'); 
+            box.className = 'video-box'; 
+            box.id = 'box_' + id;
+            
+            // Important: Local video is muted locally, Remote is unmuted
+            const vidHTML = isLocal ? `<video id="video_${id}" autoplay playsinline muted></video>` : `<video id="video_${id}" autoplay playsinline></video>`;
+            
+            box.innerHTML = `
+                <img id="fallback_${id}" class="avatar-fallback" src="${pfp}" />
+                ${vidHTML}
+                <div class="video-overlay">
+                    <span class="material-symbols-outlined" style="font-size:16px;">account_circle</span> ${name}
+                </div>
+            `;
 
-                        <hr style="border:0; border-top:1px dashed #ccc; margin: 20px 0;">
-                        <button class="btn-outline" style="width:100%; border-color: var(--error-red); color: var(--error-red);" onclick="deleteDoc('${item.id}')">
-                            <i class="fas fa-trash-alt"></i> সম্পূর্ণ গল্পটি ডিলিট করুন
-                        </button>
+            // Setup Co-host menu for Host
+            if(isHost && !isLocal) {
+                const menuBtn = document.createElement('div'); 
+                menuBtn.className = 'context-menu-btn'; 
+                menuBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:20px;">more_vert</span>';
+                
+                const menu = document.createElement('div'); 
+                menu.className = 'user-menu'; 
+                menu.id = 'menu_' + id;
+                menu.innerHTML = `<button onclick="makeCohost('${id}')"><span class="material-symbols-outlined">shield_person</span> Make Co-host</button>`;
+                
+                menuBtn.onclick = (e) => { 
+                    e.stopPropagation(); 
+                    menu.style.display = menu.style.display === 'block' ? 'none' : 'block'; 
+                };
+                
+                box.appendChild(menuBtn); 
+                box.appendChild(menu);
+            }
+            grid.appendChild(box);
+        }
+
+        // Show/Hide profile picture if video is off
+        function toggleVideoMuteState(id, isVidOn) {
+            const vid = document.getElementById('video_' + id); 
+            const fallback = document.getElementById('fallback_' + id);
+            
+            if(vid && fallback) { 
+                vid.style.opacity = isVidOn ? 1 : 0; 
+                fallback.style.display = isVidOn ? 'none' : 'block'; 
+            }
+        }
+
+        function makeCohost(peerId) {
+            if(peers[peerId] && peers[peerId].conn) {
+                peers[peerId].conn.send({ type: 'promoted_to_cohost' }); 
+                peers[peerId].isCohost = true;
+                
+                showToast(peers[peerId].name + " ekhon co-host"); 
+                document.getElementById('menu_' + peerId).style.display = 'none';
+            }
+        }
+
+        /* =========================================================================
+           SIDEBARS (CHAT & INFO)
+           ========================================================================= */
+        function toggleSidebar(type) {
+            const chat = document.getElementById('chatSidebar'); 
+            const info = document.getElementById('infoSidebar');
+            
+            if(type === 'chat') { 
+                info.classList.remove('open'); 
+                chat.classList.toggle('open'); 
+            } else { 
+                chat.classList.remove('open'); 
+                info.classList.toggle('open'); 
+            }
+        }
+
+        function sendChat() {
+            const input = document.getElementById('chatInput'); 
+            const text = input.value.trim();
+            
+            if(text) { 
+                broadcast({ type: 'chat', text: text, sender: myName }); 
+                appendChatMessage("You", text, true); 
+                input.value = ''; 
+            }
+        }
+
+        function appendChatMessage(sender, text, isMe) {
+            const body = document.getElementById('chatBody'); 
+            const div = document.createElement('div');
+            
+            div.className = isMe ? 'chat-msg me' : 'chat-msg other'; 
+            div.innerHTML = `<span class="sender">${sender}</span>${text}`;
+            
+            body.appendChild(div); 
+            body.scrollTop = body.scrollHeight;
+        }
+
+        function updateParticipantsList() {
+            const list = document.getElementById('participantsList'); 
+            if(!list) return;
+            
+            let html = `
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <img src="${myPfp}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;"> 
+                    <span>${myName} (You) ${isHost?'[Host]':(isCohost?'[Co-host]':'')}</span>
+                </div>
+            `;
+            
+            Object.keys(peers).forEach(id => {
+                const p = peers[id];
+                html += `
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <img src="${p.pfp}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;"> 
+                        <span>${p.name} ${id===hostId?'[Host]':(p.isCohost?'[Co-host]':'')}</span>
                     </div>
                 `;
             });
-
-            if (dataArr.length === 0) list.innerHTML = "<p style='text-align:center; color:var(--text-muted); font-weight:bold;'>আপনার ইনবক্সে কোনো গল্প নেই।</p>";
-        });
-    }
-
-    // --- MENTOR ACTIONS ---
-    window.updateStoryField = async function(docId, field, value, assignedMentor) {
-        try { 
-            let actualField = field;
-            if (assignedMentor === "Both" && !isMaster) {
-                if (activeMentor === MENTOR_NEHA) actualField = field + "_Neha";
-                if (activeMentor === MENTOR_TANIMA) actualField = field + "_Tanima";
-            }
-            let updateData = {};
-            updateData[actualField] = value;
-            await getRef('stories').doc(docId).update(updateData); 
-        } 
-        catch (e) { showModal("ত্রুটি", "আপডেট করতে সমস্যা হয়েছে!"); }
-    };
-
-    window.saveTextRemarks = async function(docId, assignedMentor) {
-        const text = document.getElementById(`rem_${docId}`).value;
-        try { 
-            let actualField = "remarks";
-            if (assignedMentor === "Both" && !isMaster) {
-                if (activeMentor === MENTOR_NEHA) actualField = "remarks_Neha";
-                if (activeMentor === MENTOR_TANIMA) actualField = "remarks_Tanima";
-            }
-            let updateData = {};
-            updateData[actualField] = text;
-            await getRef('stories').doc(docId).update(updateData); 
-            showModal("সফল", "মতামত সেভ হয়েছে!");
-        } 
-        catch (e) { showModal("ত্রুটি", "মতামত সেভ করতে সমস্যা হয়েছে!"); }
-    };
-
-    window.clearVoiceRemarks = async function(docId, assignedMentor) {
-        showModal("নিশ্চিতকরণ", "আপনি কি নিশ্চিতভাবে এই গল্পের ভয়েস রিমার্কস মুছে ফেলতে চান?", "confirm", async (res) => {
-            if(res) {
-                try { 
-                    let actualField = "remarksVoice";
-                    if (assignedMentor === "Both" && !isMaster) {
-                        if (activeMentor === MENTOR_NEHA) actualField = "remarksVoice_Neha";
-                        if (activeMentor === MENTOR_TANIMA) actualField = "remarksVoice_Tanima";
-                    }
-                    let updateData = {};
-                    updateData[actualField] = "";
-                    await getRef('stories').doc(docId).update(updateData); 
-                    showModal("সফল", "ভয়েস রিমার্কস মুছে ফেলা হয়েছে!");
-                } 
-                catch (e) { showModal("ত্রুটি", "সমস্যা হয়েছে!"); }
-            }
-        });
-    };
-
-    window.toggleVoiceRecord = async function(docId, assignedMentor) {
-        const btn = document.getElementById(`vBtn_${docId}`);
-        const log = document.getElementById(`vLog_${docId}`);
-        
-        if (!audioRecorder || audioRecorder.state === "inactive") {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                audioRecorder = new MediaRecorder(stream);
-                audioChunks = [];
-                audioRecorder.ondataavailable = e => audioChunks.push(e.data);
-                audioRecorder.onstop = async () => {
-                    log.innerHTML = "⏳ অডিও আপলোড হচ্ছে, দয়া করে অপেক্ষা করুন...";
-                    const fd = new FormData();
-                    fd.append('file', new Blob(audioChunks, { type: 'audio/webm' }));
-                    fd.append('upload_preset', UPLOAD_PRESET);
-                    
-                    try {
-                        const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/video/upload`, { method: 'POST', body: fd });
-                        const data = await res.json();
-                        if (data.secure_url) {
-                            let actualField = "remarksVoice";
-                            if (assignedMentor === "Both" && !isMaster) {
-                                if (activeMentor === MENTOR_NEHA) actualField = "remarksVoice_Neha";
-                                if (activeMentor === MENTOR_TANIMA) actualField = "remarksVoice_Tanima";
-                            }
-                            let updateData = {};
-                            updateData[actualField] = data.secure_url;
-                            await getRef('stories').doc(docId).update(updateData); 
-                            log.innerHTML = "✅ ভয়েস রিমার্কস সফলভাবে সেভ হয়েছে!";
-                        } else {
-                            log.innerHTML = "❌ আপলোড ফেইল হয়েছে! " + (data.error?.message || "");
-                        }
-                    } catch(e) { log.innerHTML = "❌ সার্ভার এরর!"; }
-                };
-                audioRecorder.start();
-                btn.innerHTML = "<i class='fas fa-stop-circle'></i> রেকর্ডিং বন্ধ করুন"; 
-                btn.classList.add('recording');
-                log.innerHTML = "🔴 ভয়েস রেকর্ডিং চলছে...";
-            } catch (err) { showModal("সতর্কতা", "মাইক্রোফোন পারমিশন দিন!"); }
-        } else {
-            audioRecorder.stop();
-            btn.innerHTML = "<i class='fas fa-microphone'></i> ভয়েস রিমার্কস রেকর্ড করুন"; 
-            btn.classList.remove('recording');
+            
+            list.innerHTML = html;
         }
-    };
 
-    window.deleteDoc = async function(id) {
-        showModal("সতর্কীকরণ", "আপনি কি নিশ্চিত যে এই সম্পূর্ণ গল্পটি চিরতরে মুছে ফেলতে চান? (এই কাজ ফেরানো যাবে না)", "confirm", async (res) => {
-            if(res) {
-                try {
-                    await getRef('stories').doc(id).delete();
-                    showModal("সফল", "গল্পটি ডিলিট করা হয়েছে।");
-                } catch(e) {
-                    showModal("ত্রুটি", "ডিলিট করতে সমস্যা হয়েছে!");
-                }
+        /* =========================================================================
+           EMOJI REACTIONS
+           ========================================================================= */
+        function toggleReactionMenu() { 
+            const menu = document.getElementById('reactionMenu'); 
+            menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex'; 
+        }
+
+        function sendReaction(emoji) { 
+            document.getElementById('reactionMenu').style.display = 'none'; 
+            showFloatingReaction(emoji); 
+            broadcast({ type: 'reaction', emoji: emoji }); 
+        }
+
+        function showFloatingReaction(emoji) {
+            const el = document.createElement('div'); 
+            el.className = 'floating-reaction'; 
+            el.innerText = emoji;
+            
+            document.body.appendChild(el); 
+            setTimeout(() => {
+                el.remove();
+            }, 2500);
+        }
+
+        /* =========================================================================
+           CALL TERMINATION
+           ========================================================================= */
+        function endCall(forced = false) {
+            if(isHost && !forced) { 
+                broadcast({ type: 'host_ended_call' }); 
+            } 
+            
+            playTone('leave');
+            
+            if(localStream) {
+                localStream.getTracks().forEach(track => track.stop());
             }
-        });
-    };
+            if(mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+            }
+            
+            setTimeout(() => { 
+                window.location.href = window.location.origin + window.location.pathname; 
+            }, 500);
+        }
 
-    window.exitDashboard = async () => { location.reload(); };
-
-</script>
+    </script>
 </body>
 </html>
